@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tático Pro - Versão Final</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --grass-dark: #2a732e;
+            --grass-light: #2e7d32;
+            --lines: rgba(255, 255, 255, 0.9);
+            --ui-panel: #2d2d2d;
+            --reserve-bg: linear-gradient(145deg, #333, #222);
+            --accent: #ff9800;
+        }
+
+        body { background-color: #1a1a1a; display: flex; flex-direction: column; align-items: center; margin: 0; font-family: 'Segoe UI', sans-serif; color: white; padding-bottom: 50px; user-select: none; }
+
+        .toolbar { background: var(--ui-panel); width: 100%; padding: 12px; display: flex; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); margin-bottom: 10px; position: sticky; top: 0; z-index: 2000; }
+        button { padding: 8px 14px; cursor: pointer; border: none; border-radius: 6px; background: #4caf50; color: white; font-weight: bold; font-size: 13px; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+        button.secondary { background: #2196f3; }
+        button.warning { background: #ff9800; color: black; }
+        button.danger { background: #f44336; }
+        button.help { background: #607d8b; }
+        button.active-draw { background: var(--accent) !important; outline: 2px solid white; }
+
+        #container-export { padding: 20px; background: #1a1a1a; display: flex; flex-direction: column; align-items: center; position: relative; }
+        
+        #campo {
+            width: 950px; height: 600px;
+            background-color: var(--grass-light);
+            border: 5px solid white;
+            position: relative;
+            overflow: hidden; 
+            background-image: repeating-linear-gradient(90deg, var(--grass-dark), var(--grass-dark) 50px, var(--grass-light) 50px, var(--grass-light) 100px);
+            touch-action: none;
+        }
+
+        #players-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 100; }
+        .player { pointer-events: auto; }
+
+        .campo-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; fill: none; stroke: var(--lines); stroke-width: 2; pointer-events: none; z-index: 1; }
+        #drawing-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 2; }
+        .tactic-line { fill: none; stroke: #ffff00; stroke-width: 4; stroke-linecap: round; marker-end: url(#arrowhead); }
+
+        .player { width: 80px; position: absolute; cursor: grab; display: flex; flex-direction: column; align-items: center; touch-action: none; }
+        /* Estilo para quando o técnico está fixo */
+        .player.is-coach { cursor: default; }
+        
+        .photo-outer { width: 68px; height: 68px; border-radius: 50%; background-color: #ffd700; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.4); position: relative; }
+        .photo-inner { width: 54px; height: 54px; border-radius: 50%; background: #eee; overflow: hidden; pointer-events: none; }
+        .photo-inner img { width: 100%; height: 100%; object-fit: cover; }
+        .player-number { position: absolute; top: -5px; right: 5px; background: #fff; color: #000; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: 900; display: flex; align-items: center; justify-content: center; border: 2px solid #000; cursor: pointer; z-index: 110; }
+        .player-name { background: rgba(0, 0, 0, 0.8); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-top: 5px; font-weight: bold; cursor: pointer; z-index: 110; text-align: center; width: 75px; }
+
+        .bottom-area { display: flex; width: 950px; gap: 20px; margin-top: 20px; align-items: stretch; }
+        #reservas { flex-grow: 1; background: var(--reserve-bg); border: 2px solid #444; border-radius: 12px; position: relative; min-height: 120px; display: flex; flex-wrap: wrap; padding: 35px 15px 15px; gap: 15px; justify-content: center; align-items: center; }
+        .coach-area { width: 120px; background: var(--reserve-bg); border: 2px solid #444; border-radius: 12px; position: relative; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .label-style { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: black; padding: 2px 15px; font-size: 11px; font-weight: 900; border-radius: 20px; z-index: 5; white-space: nowrap; }
+
+        .header-panel { width: 950px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .team-info { display: flex; align-items: center; gap: 15px; }
+        .logo-box { width: 70px; height: 70px; border: 2px solid #555; border-radius: 10px; background: #222; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .team-title { font-size: 22px; font-weight: 800; cursor: pointer; }
+        .visitor-panel { display: none; }
+
+        #modal-manual { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .modal-content { background: #252525; width: 700px; padding: 30px; border-radius: 15px; border: 2px solid var(--accent); position: relative; max-height: 80vh; overflow-y: auto; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 30px; cursor: pointer; color: #888; }
+        .manual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
+        .manual-item { font-size: 14px; color: #ddd; line-height: 1.4; }
+        .manual-item b { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button onclick="addNewPlayer()">➕ Novo</button>
+    <button id="btnStraight" class="secondary" onclick="setDrawMode('straight')">📏 Reta</button>
+    <button id="btnCurve" class="secondary" onclick="setDrawMode('curve')">↪️ Curva</button>
+    <button onclick="undo()" class="warning">↩️ Desfazer</button>
+    <button onclick="clearLines()" class="danger">🧹 Limpar</button>
+    <button onclick="triggerTeamColor()" class="secondary">🎨 Cor</button>
+    <button onclick="toggleVisitor()" style="background: #9e9e9e">🏟️ Adversário</button>
+    <button onclick="exportImage()" style="background:#673ab7">📸 Salvar PNG</button>
+    <button onclick="toggleManual()" class="help">❓ Manual</button>
+    <button onclick="resetAll()" class="danger">🔄</button>
+</div>
+
+<div id="container-export">
+    <div class="header-panel">
+        <div class="team-info">
+            <div class="logo-box" onclick="triggerLogo('logo-1')"><svg id="logo-1" style="width:70%; fill:white" viewBox="0 0 512 512"><path d="M256 0c-4.4 0-8.8.8-12.8 2.4-1.2.4-122.3 45.4-122.3 45.4-8.8 3.2-14.9 11.6-14.9 21v166.5c0 102.1 63.3 192.5 150.1 247.3 3.1 2 6.5 3.1 9.9 3.1s6.8-1.1 9.9-3.1C362.7 427.7 426 337.3 426 235.3V68.8c0-9.4-6.1-17.8-14.9-21 0 0-121.1-45-122.3-45.4C264.8.8 260.4 0 256 0z"/></svg></div>
+            <div class="team-title" onclick="editTitle(this)">NOME DO TIME</div>
+        </div>
+        <div class="team-info visitor-panel" id="visitor-ui">
+            <div class="team-title" onclick="editTitle(this)">ADVERSÁRIO</div>
+            <div class="logo-box" onclick="triggerLogo('logo-2')"><svg id="logo-2" style="width:70%; fill:white" viewBox="0 0 512 512"><path d="M256 0c-4.4 0-8.8.8-12.8 2.4-1.2.4-122.3 45.4-122.3 45.4-8.8 3.2-14.9 11.6-14.9 21v166.5c0 102.1 63.3 192.5 150.1 247.3 3.1 2 6.5 3.1 9.9 3.1s6.8-1.1 9.9-3.1C362.7 427.7 426 337.3 426 235.3V68.8c0-9.4-6.1-17.8-14.9-21 0 0-121.1-45-122.3-45.4C264.8.8 260.4 0 256 0z"/></svg></div>
+        </div>
+    </div>
+
+    <div id="campo">
+        <svg class="campo-svg" viewBox="0 0 950 600">
+            <line x1="475" y1="0" x2="475" y2="600" />
+            <circle cx="475" cy="300" r="91.5" />
+            <circle cx="475" cy="300" r="4" fill="white" />
+            <rect x="0" y="117" width="150" height="366" />
+            <rect x="0" y="208.5" width="55" height="183" />
+            <circle cx="110" cy="300" r="3.5" fill="white" />
+            <path d="M 150 245 A 91.5 91.5 0 0 1 150 355" />
+            <rect x="800" y="117" width="150" height="366" />
+            <rect x="895" y="208.5" width="55" height="183" />
+            <circle cx="840" cy="300" r="3.5" fill="white" />
+            <path d="M 800 245 A 91.5 91.5 0 0 0 800 355" />
+            <path d="M 0 20 A 20 20 0 0 0 20 0" />
+            <path d="M 930 0 A 20 20 0 0 0 950 20" />
+            <path d="M 20 600 A 20 20 0 0 0 0 580" />
+            <path d="M 950 580 A 20 20 0 0 0 930 600" />
+        </svg>
+        <svg id="drawing-svg">
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="#ffff00" />
+                </marker>
+            </defs>
+        </svg>
+    </div>
+
+    <div class="bottom-area">
+        <div id="reservas"><span class="label-style">BANCO DE RESERVAS</span></div>
+        <div class="coach-area" id="coach-slot"><span class="label-style">TÉCNICO</span></div>
+    </div>
+    <div id="players-layer"></div>
+</div>
+
+<div id="modal-manual" onclick="toggleManual()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <span class="close-modal" onclick="toggleManual()">&times;</span>
+        <h3 style="color:var(--accent); text-align:center">📖 MANUAL TÁTICO PRO</h3>
+        <div class="manual-grid">
+            <div class="manual-item">📍 <b>Mover:</b> Arraste jogadores. O Técnico é fixo.</div>
+            <div class="manual-item">↩️ <b>Desfazer:</b> Reverte a última ação (movimento ou setas).</div>
+            <div class="manual-item">👤 <b>Fotos:</b> <b>Duplo Clique</b> na face para trocar imagem.</div>
+            <div class="manual-item">🎨 <b>Cor:</b> <b>Clique Único</b> na borda para cor individual.</div>
+            <div class="manual-item">✏️ <b>Editar:</b> Clique nos nomes ou números para mudar o texto.</div>
+            <div class="manual-item">📏 <b>Setas:</b> Ative o modo Linha/Curva e arraste no gramado.</div>
+            <div class="manual-item">🛡️ <b>Escudos:</b> Clique nos brasões no topo para trocar o logo.</div>
+            <div class="manual-item">📸 <b>Salvar:</b> Gera um arquivo PNG de alta qualidade.</div>
+        </div>
+    </div>
+</div>
+
+<input type="file" id="logo-upload" style="display:none" accept="image/*">
+<input type="file" id="player-photo-upload" style="display:none" accept="image/*">
+<input type="color" id="team-color-picker" style="display:none">
+
+<script>
+    const campo = document.getElementById('campo');
+    const playersLayer = document.getElementById('players-layer');
+    const svgCanvas = document.getElementById('drawing-svg');
+    let drawMode = null, isMouseDown = false, startPt = { x: 0, y: 0 }, activePath = null, currentPlayerTarget = null, clickTimer = null;
+
+    let history = [];
+    function saveState() {
+        const state = {
+            players: playersLayer.innerHTML,
+            drawing: svgCanvas.innerHTML,
+            visitorVisible: document.getElementById('visitor-ui').style.display
+        };
+        history.push(JSON.stringify(state));
+        if (history.length > 30) history.shift();
+    }
+
+    function undo() {
+        if (history.length <= 1) return;
+        history.pop();
+        const prevState = JSON.parse(history[history.length - 1]);
+        playersLayer.innerHTML = prevState.players;
+        svgCanvas.innerHTML = prevState.drawing;
+        document.getElementById('visitor-ui').style.display = prevState.visitorVisible;
+        reattachEvents();
+    }
+
+    function toggleManual() {
+        const modal = document.getElementById('modal-manual');
+        modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+    }
+
+    function setDrawMode(mode) {
+        drawMode = (drawMode === mode) ? null : mode;
+        document.getElementById('btnStraight').classList.toggle('active-draw', drawMode === 'straight');
+        document.getElementById('btnCurve').classList.toggle('active-draw', drawMode === 'curve');
+    }
+
+    campo.addEventListener('mousedown', (e) => {
+        if (drawMode && !e.target.closest('.player')) {
+            const rect = campo.getBoundingClientRect();
+            isMouseDown = true;
+            startPt = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            activePath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            activePath.setAttribute("class", "tactic-line");
+            svgCanvas.appendChild(activePath);
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isMouseDown || !activePath) return;
+        const rect = campo.getBoundingClientRect();
+        const curX = e.clientX - rect.left, curY = e.clientY - rect.top;
+        if (drawMode === 'straight') activePath.setAttribute("d", `M ${startPt.x} ${startPt.y} L ${curX} ${curY}`);
+        else {
+            const midX = (startPt.x + curX) / 2, midY = (startPt.y + curY) / 2;
+            const cpX = midX + (curY - startPt.y) * 0.3, cpY = midY - (curX - startPt.x) * 0.3;
+            activePath.setAttribute("d", `M ${startPt.x} ${startPt.y} Q ${cpX} ${cpY} ${curX} ${curY}`);
+        }
+    });
+
+    document.addEventListener('mouseup', () => { if(isMouseDown) { isMouseDown = false; activePath = null; saveState(); } });
+
+    function clearLines() { svgCanvas.querySelectorAll('.tactic-line').forEach(l => l.remove()); saveState(); }
+
+    function reattachEvents() {
+        document.querySelectorAll('.player').forEach(p => {
+            setupDrag(p);
+            const nameEl = p.querySelector('.player-name');
+            if(nameEl) nameEl.onclick = (e) => { e.stopPropagation(); const n = prompt("Nome:", e.target.innerText); if(n) { e.target.innerText = n; saveState(); } };
+            const numEl = p.querySelector('.player-number');
+            if(numEl) numEl.onclick = (e) => { e.stopPropagation(); const n = prompt("Número:", e.target.innerText); if(n) { e.target.innerText = n; saveState(); } };
+        });
+    }
+
+    function setupDrag(el) {
+        let dragging = false, moved = false, startX, startY, offX, offY;
+        
+        el.onmousedown = (e) => {
+            if (e.target.closest('.player-name') || e.target.closest('.player-number')) return;
+            
+            // CORREÇÃO: SE FOR O TÉCNICO, NÃO INICIA O ARRASTAR, APENAS O CLIQUE
+            if (el.classList.contains('is-coach')) {
+                handlePlayerClick(el);
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+            setDrawMode(null);
+            
+            dragging = true;
+            moved = false;
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            const rect = el.getBoundingClientRect();
+            const exportRect = document.getElementById('container-export').getBoundingClientRect();
+            offX = e.clientX - rect.left;
+            offY = e.clientY - rect.top;
+            
+            el.style.zIndex = 1000;
+
+            const onMouseMove = (me) => {
+                if (!dragging) return;
+                const dx = me.clientX - startX;
+                const dy = me.clientY - startY;
+                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+                
+                el.style.left = (me.clientX - exportRect.left - offX) + "px";
+                el.style.top = (me.clientY - exportRect.top - offY) + "px";
+            };
+
+            const onMouseUp = () => {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                if (!dragging) return;
+                dragging = false;
+                el.style.zIndex = 100;
+                
+                if (moved) {
+                    saveState();
+                } else {
+                    handlePlayerClick(el);
+                }
+            };
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        };
+    }
+
+    function handlePlayerClick(el) {
+        if (clickTimer == null) {
+            clickTimer = setTimeout(() => {
+                el.querySelector('.c-in').click();
+                clickTimer = null;
+            }, 250);
+        } else {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            currentPlayerTarget = el.querySelector('img');
+            document.getElementById('player-photo-upload').click();
+        }
+        el.querySelector('.c-in').oninput = (e) => { 
+            el.querySelector('.photo-outer').style.backgroundColor = e.target.value; 
+            saveState(); 
+        };
+    }
+
+    function createPlayer(name, x, y, initialAnchor, color, isCoach, num) {
+        const p = document.createElement('div');
+        p.className = 'player' + (isCoach ? ' is-coach' : '');
+        const anchorRect = initialAnchor.getBoundingClientRect();
+        const exportRect = document.getElementById('container-export').getBoundingClientRect();
+        p.style.left = (anchorRect.left - exportRect.left + x) + "px";
+        p.style.top = (anchorRect.top - exportRect.top + y) + "px";
+        p.innerHTML = `
+            <div class="photo-outer" style="background-color: ${color}">
+                ${!isCoach ? `<div class="player-number">${num}</div>` : ''}
+                <div class="photo-inner"><img src="https://cdn-icons-png.flaticon.com/512/2102/2102633.png"></div>
+            </div>
+            <span class="player-name">${name}</span>
+            <input type="color" class="c-in" style="display:none">
+        `;
+        playersLayer.appendChild(p);
+        reattachEvents();
+    }
+
+    document.getElementById('player-photo-upload').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => { if(currentPlayerTarget) { currentPlayerTarget.src = ev.target.result; saveState(); } };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    function addNewPlayer() { createPlayer("Novo", 20, 25, document.getElementById('reservas'), "#ffd700", false, "?"); saveState(); }
+    function triggerTeamColor() { document.getElementById('team-color-picker').click(); }
+    document.getElementById('team-color-picker').oninput = (e) => { document.querySelectorAll('.photo-outer').forEach(p => p.style.backgroundColor = e.target.value); saveState(); };
+    function toggleVisitor() { const v = document.getElementById('visitor-ui'); v.style.display = (v.style.display==='flex')?'none':'flex'; saveState(); }
+    function editTitle(el) { const n = prompt("Nome:", el.innerText); if(n) { el.innerText = n; saveState(); } }
+    function triggerLogo(id) { window.activeLogo = id; document.getElementById('logo-upload').click(); }
+    document.getElementById('logo-upload').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const svg = document.getElementById(window.activeLogo);
+            const img = document.createElement('img');
+            img.src = ev.target.result; img.style.width="100%"; img.id = window.activeLogo;
+            svg.parentNode.replaceChild(img, svg);
+            saveState();
+        };
+        reader.readAsDataURL(e.target.files[0]);
+    };
+
+    function exportImage() { 
+        html2canvas(document.getElementById('container-export'), { useCORS: true, scale: 2, backgroundColor: "#1a1a1a" }).then(canvas => { 
+            const link = document.createElement('a'); link.download = 'tatico_pro.png'; link.href = canvas.toDataURL(); link.click(); 
+        }); 
+    }
+    
+    function resetAll() { if(confirm("Resetar?")) location.reload(); }
+
+    window.onload = () => {
+        const team = [
+            {n:"GK", x:45, y:265, c:"#ff9800", num:"1"}, {n:"ZAG", x:180, y:180, c:"#2196f3", num:"3"},
+            {n:"ZAG", x:180, y:350, c:"#2196f3", num:"4"}, {n:"LAT", x:220, y:50, c:"#2196f3", num:"2"},
+            {n:"LAT", x:220, y:480, c:"#2196f3", num:"6"}, {n:"VOL", x:380, y:265, c:"#9c27b0", num:"5"},
+            {n:"MEI", x:500, y:120, c:"#9c27b0", num:"8"}, {n:"MEI", x:500, y:410, c:"#9c27b0", num:"10"},
+            {n:"ATA", x:720, y:100, c:"#f44336", num:"7"}, {n:"ATA", x:720, y:430, c:"#f44336", num:"11"},
+            {n:"CA", x:810, y:265, c:"#f44336", num:"9"}
+        ];
+        team.forEach(p => createPlayer(p.n, p.x, p.y, campo, p.c, false, p.num));
+        createPlayer("TÉCNICO", 20, 25, document.getElementById('coach-slot'), "#222", true, "");
+        saveState();
+    };
+</script>
+</body>
+</html>
