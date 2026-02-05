@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estatísticas Pro - Final</title>
+    <style>
+        :root {
+            --bg-dark: #0b111a;
+            --panel-bg: rgba(16, 24, 39, 0.95);
+            --accent-blue: #00d2ff;
+            --danger: #ef4444;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .editable {
+            background: transparent;
+            border: 1px dashed transparent;
+            color: white;
+            text-align: center;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .editable:hover { border-color: var(--accent-blue); }
+        .editable:focus { border-color: var(--accent-blue); outline: none; background: rgba(255,255,255,0.05); }
+
+        /* Upload de Logos - Modificado */
+        .logo-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .logo-preview {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border-radius: 8px;
+            padding: 5px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .champ-logo-preview {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+
+        /* Cabeçalho - Modificado */
+        .header-section {
+            padding: 20px;
+            border-bottom: 2px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .champ-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        /* Nome do campeonato com mesma fonte dos times */
+        .champ-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: white;
+            text-align: center;
+            width: 100%;
+            background: transparent;
+            border: 1px dashed transparent;
+            padding: 5px;
+        }
+        
+        .champ-name:hover { border-color: var(--accent-blue); }
+        .champ-name:focus { 
+            border-color: var(--accent-blue); 
+            outline: none; 
+            background: rgba(255,255,255,0.05); 
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: 1fr 140px 1fr;
+            width: 100%;
+            align-items: center;
+        }
+
+        .team-name { 
+            font-size: 1.6rem; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            margin-top: 10px;
+        }
+
+        .score-box {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: rgba(0,0,0,0.4);
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        /* Placar de Pênaltis */
+        .penalty-score-box {
+            margin-top: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            padding: 8px 15px;
+            border: 1px solid var(--glass-border);
+            display: none;
+        }
+
+        .penalty-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        /* Cronômetro Normal */
+        .timer-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .timer-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+            margin-bottom: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 8px 15px;
+            border: 1px solid var(--glass-border);
+            display: inline-block;
+        }
+
+        .timer-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        /* Cronômetro de Prorrogação */
+        .overtime-container {
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .overtime-display {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--warning);
+            margin-bottom: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 8px 15px;
+            border: 1px solid var(--warning);
+            display: inline-block;
+        }
+
+        /* Tempo Total */
+        .total-time-container {
+            margin-top: 15px;
+            text-align: center;
+            display: none;
+        }
+
+        .total-time-display {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--success);
+            margin-bottom: 8px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 8px 15px;
+            border: 1px solid var(--success);
+            display: inline-block;
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .timer-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .timer-btn:hover {
+            background: #334155;
+        }
+
+        .timer-btn.active {
+            background: var(--accent-blue);
+            color: black;
+        }
+        
+        .extra-time-btn {
+            background: #475569;
+            font-weight: bold;
+        }
+        
+        .extra-time-btn:hover {
+            background: #64748b;
+        }
+        
+        .overtime-btn {
+            background: #7c2d12;
+            font-weight: bold;
+        }
+        
+        .overtime-btn:hover {
+            background: #9a3412;
+        }
+
+        /* Tabela de Stats */
+        .stat-row {
+            display: grid;
+            grid-template-columns: 160px 1fr 160px;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-label { text-align: center; text-transform: uppercase; font-size: 0.8rem; color: #94a3b8; letter-spacing: 1px; }
+
+        /* Controles (+ -) */
+        .control-group { display: flex; align-items: center; gap: 12px; justify-content: center; }
+        
+        .btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-plus { background: #1e293b; border: 1px solid #334155; }
+        .btn-plus:hover { background: var(--accent-blue); color: black; }
+        .btn-minus { background: var(--danger); opacity: 0.8; }
+        .btn-minus:hover { opacity: 1; }
+        .btn-reset { 
+            background: #475569; 
+            opacity: 0.7;
+            font-size: 0.7rem;
+            width: auto;
+            padding: 0 10px;
+        }
+        .btn-reset:hover { background: #64748b; opacity: 1; }
+
+        .val-display { font-size: 1.5rem; font-weight: bold; min-width: 45px; text-align: center; color: var(--accent-blue); }
+
+        /* Botões de Exportação */
+        .footer-actions {
+            padding: 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            background: var(--accent-blue);
+            color: #0b111a;
+            border: none;
+            padding: 12px 24px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-transform: uppercase;
+            min-width: 180px;
+        }
+
+        .export-btn:hover { background: white; }
+        
+        .export-btn.secondary {
+            background: #475569;
+            color: white;
+        }
+        
+        .export-btn.secondary:hover {
+            background: #64748b;
+        }
+
+        input[type="file"] { 
+            display: none; 
+        }
+        
+        /* Ícone de upload mais discreto */
+        .upload-icon {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: var(--accent-blue);
+            color: black;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .logo-upload-container:hover .upload-icon {
+            opacity: 1;
+        }
+
+        /* Modal para Exportação */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+        
+        .modal-textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin-top: 15px;
+        }
+        
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .export-option {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .export-option:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent-blue);
+        }
+        
+        .export-option h4 {
+            margin: 0 0 5px 0;
+            color: var(--accent-blue);
+        }
+        
+        .export-option p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* Time Controls */
+        .time-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .time-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .time-btn:hover {
+            background: #334155;
+        }
+        
+        .time-btn.active {
+            background: var(--accent-blue);
+            color: black;
+        }
+        
+        .time-btn.overtime {
+            background: #7c2d12;
+        }
+        
+        .time-btn.overtime:hover {
+            background: #9a3412;
+        }
+        
+        .time-btn.overtime.active {
+            background: var(--warning);
+            color: black;
+        }
+        
+        .time-display {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        /* Container para logos com posição relativa */
+        .logo-container {
+            position: relative;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="header-section">
+        <div class="champ-area">
+            <!-- Logo do Campeonato (sem texto) -->
+            <div class="logo-container">
+                <label class="logo-upload-container">
+                    <img id="preview-champ" class="logo-preview champ-logo-preview" 
+                         src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232d3748' rx='8'/%3E%3Ctext x='50' y='55' font-family='Arial' font-size='12' fill='%234a5568' text-anchor='middle'%3ELOGO%3C/text%3E%3C/svg%3E">
+                    <input type="file" onchange="loadFile(event, 'preview-champ')" accept="image/*">
+                </label>
+            </div>
+            
+            <!-- Nome do Campeonato (mesma fonte dos times) -->
+            <input type="text" id="champ-name" class="champ-name" value="NOME DO CAMPEONATO">
+        </div>
+        
+        <div class="teams-grid">
+            <div>
+                <!-- Logo Time A (sem texto) -->
+                <div class="logo-container">
+                    <label class="logo-upload-container">
+                        <img id="preview-a" class="logo-preview" 
+                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d3748'/%3E%3Ctext x='50' y='55' font-family='Arial' font-size='12' fill='%234a5568' text-anchor='middle'%3EA%3C/text%3E%3C/svg%3E">
+                        <input type="file" onchange="loadFile(event, 'preview-a')" accept="image/*">
+                    </label>
+                </div>
+                <input type="text" id="team-a-name" class="editable team-name" value="TIME A">
+                <div class="control-group" style="margin-top: 10px;">
+                    <button class="btn btn-minus" onclick="changeScore('a', -1)">-</button>
+                    <button class="btn btn-plus" onclick="changeScore('a', 1)">+</button>
+                </div>
+            </div>
+
+            <div>
+                <div class="score-box">
+                    <span id="score-a">0</span>:<span id="score-b">0</span>
+                </div>
+                
+                <!-- Placar de Pênaltis -->
+                <div class="penalty-score-box" id="penalty-box">
+                    <div>Pênaltis: <span id="penalty-a">0</span> - <span id="penalty-b">0</span></div>
+                    <div class="penalty-controls">
+                        <button class="btn btn-plus" onclick="changePenalty('a', 1)">+</button>
+                        <button class="btn btn-minus" onclick="changePenalty('a', -1)">-</button>
+                        <button class="btn btn-plus" onclick="changePenalty('b', 1)">+</button>
+                        <button class="btn btn-minus" onclick="changePenalty('b', -1)">-</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <!-- Logo Time B (sem texto) -->
+                <div class="logo-container">
+                    <label class="logo-upload-container">
+                        <img id="preview-b" class="logo-preview" 
+                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%232d3748'/%3E%3Ctext x='50' y='55' font-family='Arial' font-size='12' fill='%234a5568' text-anchor='middle'%3EB%3C/text%3E%3C/svg%3E">
+                        <input type="file" onchange="loadFile(event, 'preview-b')" accept="image/*">
+                    </label>
+                </div>
+                <input type="text" id="team-b-name" class="editable team-name" value="TIME B">
+                <div class="control-group" style="margin-top: 10px;">
+                    <button class="btn btn-minus" onclick="changeScore('b', -1)">-</button>
+                    <button class="btn btn-plus" onclick="changeScore('b', 1)">+</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controles de Tempo -->
+        <div class="time-controls">
+            <button class="time-btn" onclick="setMatchTime('1T')">1º Tempo</button>
+            <button class="time-btn" onclick="setMatchTime('2T')">2º Tempo</button>
+            <button class="time-btn" onclick="toggleOvertime()" id="overtime-btn">Prorrogação</button>
+            <button class="time-btn" onclick="setMatchTime('FT')">Fim de Jogo</button>
+            <button class="time-btn" id="penalty-btn" onclick="togglePenalties()">Pênaltis</button>
+        </div>
+        <div class="time-display" id="match-time">Status: Não iniciado</div>
+        
+        <!-- Cronômetro Normal -->
+        <div class="timer-container">
+            <div class="timer-label">Tempo Normal</div>
+            <div class="timer-display" id="timer-display">00:00</div>
+            <div class="timer-controls">
+                <button class="timer-btn" onclick="startTimer('normal')">▶ Iniciar</button>
+                <button class="timer-btn" onclick="pauseTimer('normal')">⏸ Pausar</button>
+                <button class="timer-btn" onclick="resetTimer('normal')">↺ Resetar</button>
+                <button class="timer-btn" onclick="setTimer(45, 'normal')">45:00</button>
+                <button class="timer-btn" onclick="setTimer(90, 'normal')">90:00</button>
+                <button class="timer-btn extra-time-btn" onclick="addExtraTime()">+1'</button>
+            </div>
+        </div>
+        
+        <!-- Cronômetro de Prorrogação -->
+        <div class="overtime-container" id="overtime-container">
+            <div class="timer-label">Prorrogação</div>
+            <div class="overtime-display" id="overtime-display">00:00</div>
+            <div class="timer-controls">
+                <button class="timer-btn overtime-btn" onclick="startTimer('overtime')">▶ Iniciar</button>
+                <button class="timer-btn overtime-btn" onclick="pauseTimer('overtime')">⏸ Pausar</button>
+                <button class="timer-btn overtime-btn" onclick="resetTimer('overtime')">↺ Resetar</button>
+                <button class="timer-btn overtime-btn" onclick="setTimer(15, 'overtime')">15:00</button>
+                <button class="timer-btn overtime-btn" onclick="setTimer(30, 'overtime')">30:00</button>
+                <button class="timer-btn overtime-btn" onclick="addOvertimeExtraTime()">+1'</button>
+            </div>
+        </div>
+        
+        <!-- Tempo Total -->
+        <div class="total-time-container" id="total-time-container">
+            <div class="timer-label">Tempo Total</div>
+            <div class="total-time-display" id="total-time-display">00:00</div>
+        </div>
+    </div>
+
+    <div id="stats-body"></div>
+
+    <div class="footer-actions">
+        <button class="export-btn" onclick="showExportModal()">Exportar Resultado</button>
+        <button class="export-btn secondary" onclick="resetAllStats()">Resetar Tudo</button>
+    </div>
+</div>
+
+<!-- Modal para Exportação -->
+<div id="exportModal" class="modal">
+    <div class="modal-content">
+        <h3>Exportar Resultado</h3>
+        <p>Escolha o formato de exportação:</p>
+        
+        <div class="export-options">
+            <div class="export-option" onclick="exportHTMLReport()">
+                <h4>📄 HTML Editável</h4>
+                <p>Exporta como página HTML onde só os resultados podem ser alterados</p>
+            </div>
+            
+            <div class="export-option" onclick="exportPNG()">
+                <h4>🖼️ Imagem (PNG)</h4>
+                <p>Gera uma imagem do placar atual</p>
+            </div>
+            
+            <div class="export-option" onclick="exportTextReport()">
+                <h4>📝 Texto Simples</h4>
+                <p>Exporta em formato de texto para compartilhamento</p>
+            </div>
+        </div>
+        
+        <div class="modal-actions">
+            <button class="export-btn secondary" onclick="closeModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de confirmação -->
+<div id="toast" class="toast"></div>
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script>
+    const metrics = [
+        { id: 'shots', label: 'Chutes' },
+        { id: 'onTarget', label: 'Chutes a Gol' },
+        { id: 'possession', label: 'Posse de Bola %', isPct: true },
+        { id: 'passes', label: 'Passes' },
+        { id: 'passAcc', label: 'Precisão de Passe %', isPct: true },
+        { id: 'fouls', label: 'Faltas' },
+        { id: 'yellow', label: 'Cartões Amarelos' },
+        { id: 'red', label: 'Cartões Vermelhos' },
+        { id: 'offside', label: 'Impedimentos' },
+        { id: 'corners', label: 'Escanteios' }
+    ];
+
+    const data = { 
+        a: {}, 
+        b: {}, 
+        scoreA: 0, 
+        scoreB: 0,
+        penaltyA: 0,
+        penaltyB: 0,
+        matchTime: 'Não iniciado',
+        normalTimer: { minutes: 0, seconds: 0, running: false, extraTime: 0 },
+        overtimeTimer: { minutes: 0, seconds: 0, running: false, extraTime: 0, active: false },
+        lastUpdate: new Date().toISOString()
+    };
+
+    let normalTimerInterval = null;
+    let overtimeTimerInterval = null;
+
+    function init() {
+        const body = document.getElementById('stats-body');
+        metrics.forEach(m => {
+            data.a[m.id] = m.id === 'possession' ? 50 : 0;
+            data.b[m.id] = m.id === 'possession' ? 50 : 0;
+            const row = document.createElement('div');
+            row.className = 'stat-row';
+            row.innerHTML = `
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('${m.id}', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-${m.id}">${data.a[m.id]}${m.isPct?'%':''}</div>
+                    <button class="btn btn-minus" onclick="update('${m.id}', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">${m.label}</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('${m.id}', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-${m.id}">${data.b[m.id]}${m.isPct?'%':''}</div>
+                    <button class="btn btn-plus" onclick="update('${m.id}', 'b', 1)">+</button>
+                </div>`;
+            body.appendChild(row);
+        });
+        
+        updateTimerDisplay('normal');
+    }
+
+    function update(id, team, val) {
+        data[team][id] = Math.max(0, data[team][id] + val);
+        if(id === 'possession') {
+            const other = team === 'a' ? 'b' : 'a';
+            data[other].possession = 100 - data[team].possession;
+            document.getElementById('val-a-possession').innerText = data.a.possession + '%';
+            document.getElementById('val-b-possession').innerText = data.b.possession + '%';
+        } else {
+            const isPct = metrics.find(m => m.id === id).isPct;
+            document.getElementById(`val-${team}-${id}`).innerText = data[team][id] + (isPct ? '%' : '');
+        }
+        data.lastUpdate = new Date().toISOString();
+    }
+
+    function changeScore(team, val) {
+        if(team === 'a') data.scoreA = Math.max(0, data.scoreA + val);
+        else data.scoreB = Math.max(0, data.scoreB + val);
+        document.getElementById('score-a').innerText = data.scoreA;
+        document.getElementById('score-b').innerText = data.scoreB;
+        data.lastUpdate = new Date().toISOString();
+    }
+
+    function changePenalty(team, val) {
+        if(team === 'a') {
+            data.penaltyA = Math.max(0, data.penaltyA + val);
+            document.getElementById('penalty-a').innerText = data.penaltyA;
+        } else {
+            data.penaltyB = Math.max(0, data.penaltyB + val);
+            document.getElementById('penalty-b').innerText = data.penaltyB;
+        }
+        data.lastUpdate = new Date().toISOString();
+    }
+
+    function togglePenalties() {
+        const penaltyBox = document.getElementById('penalty-box');
+        const penaltyBtn = document.getElementById('penalty-btn');
+        
+        if(penaltyBox.style.display === 'block') {
+            penaltyBox.style.display = 'none';
+            penaltyBtn.classList.remove('active');
+            setMatchTime('FT');
+        } else {
+            penaltyBox.style.display = 'block';
+            penaltyBtn.classList.add('active');
+            setMatchTime('PEN');
+        }
+    }
+
+    function toggleOvertime() {
+        const overtimeContainer = document.getElementById('overtime-container');
+        const totalTimeContainer = document.getElementById('total-time-container');
+        const overtimeBtn = document.getElementById('overtime-btn');
+        
+        if(data.overtimeTimer.active) {
+            // Desativar prorrogação
+            data.overtimeTimer.active = false;
+            overtimeContainer.style.display = 'none';
+            totalTimeContainer.style.display = 'none';
+            overtimeBtn.classList.remove('active');
+            setMatchTime('FT');
+        } else {
+            // Ativar prorrogação
+            data.overtimeTimer.active = true;
+            overtimeContainer.style.display = 'block';
+            totalTimeContainer.style.display = 'block';
+            overtimeBtn.classList.add('active');
+            setMatchTime('PR');
+            updateTotalTime();
+        }
+    }
+
+    function setMatchTime(status) {
+        data.matchTime = status;
+        document.getElementById('match-time').innerText = `Status: ${status}`;
+        
+        // Atualizar botões ativos
+        document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+        
+        if(status === 'PEN') {
+            document.getElementById('penalty-btn').classList.add('active');
+        } else if(status === 'PR') {
+            document.getElementById('overtime-btn').classList.add('active');
+        }
+    }
+
+    // Funções do Cronômetro
+    function startTimer(type) {
+        const timer = data[type === 'normal' ? 'normalTimer' : 'overtimeTimer'];
+        
+        if(!timer.running) {
+            timer.running = true;
+            
+            if(type === 'normal') {
+                normalTimerInterval = setInterval(() => {
+                    timer.seconds++;
+                    if(timer.seconds >= 60) {
+                        timer.minutes++;
+                        timer.seconds = 0;
+                    }
+                    updateTimerDisplay('normal');
+                    if(data.overtimeTimer.active) {
+                        updateTotalTime();
+                    }
+                }, 1000);
+            } else {
+                overtimeTimerInterval = setInterval(() => {
+                    timer.seconds++;
+                    if(timer.seconds >= 60) {
+                        timer.minutes++;
+                        timer.seconds = 0;
+                    }
+                    updateTimerDisplay('overtime');
+                    updateTotalTime();
+                }, 1000);
+            }
+        }
+    }
+
+    function pauseTimer(type) {
+        const timer = data[type === 'normal' ? 'normalTimer' : 'overtimeTimer'];
+        
+        timer.running = false;
+        if(type === 'normal' && normalTimerInterval) {
+            clearInterval(normalTimerInterval);
+            normalTimerInterval = null;
+        } else if(type === 'overtime' && overtimeTimerInterval) {
+            clearInterval(overtimeTimerInterval);
+            overtimeTimerInterval = null;
+        }
+    }
+
+    function resetTimer(type) {
+        const timer = data[type === 'normal' ? 'normalTimer' : 'overtimeTimer'];
+        
+        pauseTimer(type);
+        timer.minutes = 0;
+        timer.seconds = 0;
+        timer.extraTime = 0;
+        updateTimerDisplay(type);
+        if(data.overtimeTimer.active) {
+            updateTotalTime();
+        }
+    }
+
+    function setTimer(minutes, type) {
+        const timer = data[type === 'normal' ? 'normalTimer' : 'overtimeTimer'];
+        
+        pauseTimer(type);
+        timer.minutes = minutes;
+        timer.seconds = 0;
+        updateTimerDisplay(type);
+        if(data.overtimeTimer.active) {
+            updateTotalTime();
+        }
+    }
+
+    function addExtraTime() {
+        data.normalTimer.extraTime += 1;
+        updateTimerDisplay('normal');
+        showToast('+1 minuto adicionado ao tempo normal');
+    }
+
+    function addOvertimeExtraTime() {
+        data.overtimeTimer.extraTime += 1;
+        updateTimerDisplay('overtime');
+        showToast('+1 minuto adicionado à prorrogação');
+    }
+
+    function updateTimerDisplay(type) {
+        const timer = data[type === 'normal' ? 'normalTimer' : 'overtimeTimer'];
+        const minutesStr = timer.minutes.toString().padStart(2, '0');
+        const secondsStr = timer.seconds.toString().padStart(2, '0');
+        
+        let display = `${minutesStr}:${secondsStr}`;
+        
+        if (timer.extraTime > 0) {
+            display += ` +${timer.extraTime}'`;
+        }
+        
+        if(type === 'normal') {
+            document.getElementById('timer-display').innerText = display;
+        } else {
+            document.getElementById('overtime-display').innerText = display;
+        }
+    }
+
+    function updateTotalTime() {
+        // Soma tempo normal + tempo de prorrogação
+        const totalMinutes = data.normalTimer.minutes + data.overtimeTimer.minutes;
+        const totalSeconds = data.normalTimer.seconds + data.overtimeTimer.seconds;
+        const totalExtraTime = data.normalTimer.extraTime + data.overtimeTimer.extraTime;
+        
+        // Ajustar segundos se passar de 60
+        let adjustedMinutes = totalMinutes + Math.floor(totalSeconds / 60);
+        let adjustedSeconds = totalSeconds % 60;
+        
+        const minutesStr = adjustedMinutes.toString().padStart(2, '0');
+        const secondsStr = adjustedSeconds.toString().padStart(2, '0');
+        
+        let display = `${minutesStr}:${secondsStr}`;
+        
+        if (totalExtraTime > 0) {
+            display += ` +${totalExtraTime}'`;
+        }
+        
+        document.getElementById('total-time-display').innerText = display;
+    }
+
+    function loadFile(event, previewId) {
+        var output = document.getElementById(previewId);
+        output.src = URL.createObjectURL(event.target.files[0]);
+        output.style.border = "none";
+        data.lastUpdate = new Date().toISOString();
+        showToast('Logo carregada com sucesso!');
+    }
+
+    function showExportModal() {
+        document.getElementById('exportModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('exportModal').style.display = 'none';
+    }
+
+    function exportHTMLReport() {
+        const champ = document.getElementById('champ-name').value;
+        const teamA = document.getElementById('team-a-name').value;
+        const teamB = document.getElementById('team-b-name').value;
+        
+        // Calcular tempos para o relatório
+        let timeInfo = `Tempo: ${document.getElementById('timer-display').innerText}`;
+        
+        if(data.overtimeTimer.active) {
+            timeInfo += ` | Prorrogação: ${document.getElementById('overtime-display').innerText}`;
+            timeInfo += ` | Total: ${document.getElementById('total-time-display').innerText}`;
+        }
+        
+        // Criar HTML editável
+        const htmlContent = `
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório: ${teamA} vs ${teamB}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .report-container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .championship {
+            font-size: 1.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .match-title {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .score-board {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        .team {
+            text-align: center;
+        }
+        .team-name {
+            font-size: 1.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border: 2px dashed #ccc;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .team-name:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .score {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 0 10px;
+            border: 2px dashed #ccc;
+            padding: 0 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .score:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .penalty-score {
+            font-size: 20px;
+            color: #666;
+            margin-top: 10px;
+        }
+        .time-info {
+            font-size: 16px;
+            color: #666;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+        }
+        .stats-table th {
+            background: #007bff;
+            color: white;
+            padding: 12px;
+            text-align: center;
+        }
+        .stats-table td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+        .stats-table tr:hover {
+            background: #f9f9f9;
+        }
+        .editable-stat {
+            border: 1px dashed #ccc;
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+        .editable-stat:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="header">
+            <div class="championship" contenteditable="true">${champ}</div>
+            <div class="match-title">${teamA} vs ${teamB}</div>
+            <div>Status: ${data.matchTime} | Data: ${new Date().toLocaleString('pt-BR')}</div>
+            <div class="time-info">${timeInfo}</div>
+        </div>
+        
+        <div class="score-board">
+            <div class="team">
+                <div class="team-name" contenteditable="true">${teamA}</div>
+                <div class="score" contenteditable="true">${data.scoreA}</div>
+            </div>
+            
+            <div style="font-size: 24px; font-weight: bold;">X</div>
+            
+            <div class="team">
+                <div class="team-name" contenteditable="true">${teamB}</div>
+                <div class="score" contenteditable="true">${data.scoreB}</div>
+            </div>
+        </div>
+        
+        ${data.penaltyA > 0 || data.penaltyB > 0 ? `
+        <div class="penalty-score">
+            Pênaltis: <span contenteditable="true">${data.penaltyA}</span> - <span contenteditable="true">${data.penaltyB}</span>
+        </div>
+        ` : ''}
+        
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Estatística</th>
+                    <th>${teamA}</th>
+                    <th>${teamB}</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${metrics.map(m => `
+                <tr>
+                    <td>${m.label}</td>
+                    <td><span class="editable-stat" contenteditable="true">${data.a[m.id]}${m.isPct?'%':''}</span></td>
+                    <td><span class="editable-stat" contenteditable="true">${data.b[m.id]}${m.isPct?'%':''}</span></td>
+                </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        
+        <div class="footer">
+            Relatório gerado em ${new Date().toLocaleString('pt-BR')} | Pode editar os valores destacados
+        </div>
+    </div>
+    
+    <script>
+        // Salvar alterações automaticamente
+        document.querySelectorAll('[contenteditable="true"]').forEach(element => {
+            element.addEventListener('blur', function() {
+                localStorage.setItem('reportData', document.body.innerHTML);
+            });
+        });
+        
+        // Carregar alterações salvas
+        window.addEventListener('load', function() {
+            const saved = localStorage.getItem('reportData');
+            if(saved) {
+                document.body.innerHTML = saved;
+            }
+        });
+    <\/script>
+</body>
+</html>`;
+
+        // Criar e baixar o arquivo
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const anchor = document.createElement('a');
+        anchor.download = `relatorio_${teamA}_vs_${teamB}.html`;
+        anchor.href = window.URL.createObjectURL(blob);
+        anchor.click();
+        
+        showToast('Relatório HTML exportado! Pode editar os valores destacados.');
+        closeModal();
+    }
+
+    async function exportPNG() {
+        try {
+            // Criar um container temporário para captura
+            const captureDiv = document.createElement('div');
+            captureDiv.style.padding = '20px';
+            captureDiv.style.background = '#0b111a';
+            
+            let timeInfo = document.getElementById('timer-display').innerText;
+            if(data.overtimeTimer.active) {
+                timeInfo += ` | PR: ${document.getElementById('overtime-display').innerText}`;
+                timeInfo += ` | Total: ${document.getElementById('total-time-display').innerText}`;
+            }
+            
+            captureDiv.innerHTML = `
+                <div style="text-align: center; background: rgba(16, 24, 39, 0.95); padding: 30px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 1.6rem; font-weight: 800; text-transform: uppercase; color: white; margin-bottom: 10px;">${document.getElementById('champ-name').value}</div>
+                    <div style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 30px 0;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.6rem; font-weight: 800; text-transform: uppercase;">${document.getElementById('team-a-name').value}</div>
+                            <div style="font-size: 64px; font-weight: bold; color: #00d2ff;">${data.scoreA}</div>
+                        </div>
+                        <div style="font-size: 36px;">X</div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 1.6rem; font-weight: 800; text-transform: uppercase;">${document.getElementById('team-b-name').value}</div>
+                            <div style="font-size: 64px; font-weight: bold; color: #00d2ff;">${data.scoreB}</div>
+                        </div>
+                    </div>
+                    ${data.penaltyA > 0 || data.penaltyB > 0 ? `
+                    <div style="color: #94a3b8; font-size: 18px; margin-top: 10px;">
+                        Pênaltis: ${data.penaltyA} - ${data.penaltyB}
+                    </div>
+                    ` : ''}
+                    <div style="color: #94a3b8; margin-top: 20px;">
+                        ${data.matchTime} | ${timeInfo} | ${new Date().toLocaleString('pt-BR')}
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(captureDiv);
+            
+            // Usar html2canvas para capturar como imagem
+            const canvas = await html2canvas(captureDiv, {
+                backgroundColor: '#0b111a',
+                scale: 2,
+                useCORS: true
+            });
+            
+            // Remover o div temporário
+            document.body.removeChild(captureDiv);
+            
+            // Criar link de download
+            const link = document.createElement('a');
+            link.download = `placar_${document.getElementById('team-a-name').value}_vs_${document.getElementById('team-b-name').value}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            
+            showToast('Imagem PNG exportada com sucesso!');
+            closeModal();
+            
+        } catch (error) {
+            showToast('Erro ao exportar imagem: ' + error.message, true);
+        }
+    }
+
+    function exportTextReport() {
+        const champ = document.getElementById('champ-name').value;
+        const teamA = document.getElementById('team-a-name').value;
+        const teamB = document.getElementById('team-b-name').value;
+        
+        let report = `⚽ RELATÓRIO DE PARTIDA ⚽\n`;
+        report += `══════════════════════════════════════\n`;
+        report += `CAMPEONATO: ${champ}\n`;
+        report += `══════════════════════════════════════\n\n`;
+        report += `🎯 PLACAR FINAL:\n`;
+        report += `${teamA} ${data.scoreA} x ${data.scoreB} ${teamB}\n`;
+        
+        if(data.penaltyA > 0 || data.penaltyB > 0) {
+            report += `Pênaltis: ${data.penaltyA} - ${data.penaltyB}\n`;
+        }
+        
+        report += `Status: ${data.matchTime}\n`;
+        report += `Tempo: ${document.getElementById('timer-display').innerText}\n`;
+        
+        if(data.overtimeTimer.active) {
+            report += `Prorrogação: ${document.getElementById('overtime-display').innerText}\n`;
+            report += `Tempo Total: ${document.getElementById('total-time-display').innerText}\n`;
+        }
+        
+        report += `Data/Hora: ${new Date().toLocaleString('pt-BR')}\n\n`;
+        
+        report += `📊 ESTATÍSTICAS:\n`;
+        report += `══════════════════════════════════════\n`;
+        
+        metrics.forEach(m => {
+            const valA = data.a[m.id] + (m.isPct ? '%' : '');
+            const valB = data.b[m.id] + (m.isPct ? '%' : '');
+            report += `• ${m.label}:\n`;
+            report += `  ${teamA}: ${valA} | ${teamB}: ${valB}\n`;
+        });
+        
+        report += `\n══════════════════════════════════════\n`;
+        report += `Relatório gerado automaticamente\n`;
+        
+        const blob = new Blob([report], { type: 'text/plain' });
+        const anchor = document.createElement('a');
+        anchor.download = `relatorio_${teamA}_vs_${teamB}.txt`;
+        anchor.href = window.URL.createObjectURL(blob);
+        anchor.click();
+        
+        showToast('Relatório de texto exportado!');
+        closeModal();
+    }
+
+    function resetAllStats() {
+        if (confirm('Tem certeza que deseja resetar todas as estatísticas?')) {
+            data.scoreA = 0;
+            data.scoreB = 0;
+            data.penaltyA = 0;
+            data.penaltyB = 0;
+            data.matchTime = 'Não iniciado';
+            data.overtimeTimer.active = false;
+            
+            // Resetar placar de pênaltis
+            document.getElementById('penalty-box').style.display = 'none';
+            document.getElementById('penalty-btn').classList.remove('active');
+            document.getElementById('penalty-a').innerText = '0';
+            document.getElementById('penalty-b').innerText = '0';
+            
+            // Resetar prorrogação
+            document.getElementById('overtime-container').style.display = 'none';
+            document.getElementById('total-time-container').style.display = 'none';
+            document.getElementById('overtime-btn').classList.remove('active');
+            
+            // Resetar timers
+            resetTimer('normal');
+            resetTimer('overtime');
+            
+            // Resetar estatísticas
+            metrics.forEach(m => {
+                data.a[m.id] = m.id === 'possession' ? 50 : 0;
+                data.b[m.id] = m.id === 'possession' ? 50 : 0;
+                
+                document.getElementById(`val-a-${m.id}`).innerText = data.a[m.id] + (m.isPct ? '%' : '');
+                document.getElementById(`val-b-${m.id}`).innerText = data.b[m.id] + (m.isPct ? '%' : '');
+            });
+            
+            // Resetar placar
+            document.getElementById('score-a').innerText = '0';
+            document.getElementById('score-b').innerText = '0';
+            document.getElementById('match-time').innerText = 'Status: Não iniciado';
+            
+            showToast('Todas as estatísticas foram resetadas!');
+        }
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.background = isError ? 'var(--danger)' : 'var(--success)';
+        toast.style.display = 'block';
+        
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    init();
+</script>
+</body>
+</html>

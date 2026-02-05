@@ -1,0 +1,410 @@
+<html lang="pt-br" data-lt-installed="true"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estatísticas Pro - Final</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0b111a;
+            --panel-bg: rgba(16, 24, 39, 0.95);
+            --accent-blue: #00d2ff;
+            --danger: #ef4444;
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            padding-bottom: 20px;
+        }
+
+        .editable {
+            background: transparent;
+            border: 1px dashed transparent;
+            color: white;
+            text-align: center;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .editable:hover { border-color: var(--accent-blue); }
+        .editable:focus { border-color: var(--accent-blue); outline: none; background: rgba(255,255,255,0.05); }
+
+        /* Estilo dos Logos */
+        .logo-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .logo-preview {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        /* Moldura pontilhada apenas se não houver imagem */
+        .no-image {
+            border: 1px dashed #555;
+            background: rgba(0,0,0,0.2);
+            padding: 10px;
+        }
+
+        .logo-label { 
+            font-size: 0.65rem; 
+            color: #888; 
+            margin-top: 5px; 
+            text-transform: uppercase;
+        }
+
+        /* Esconde o texto quando a classe 'has-image' é adicionada */
+        .has-image .logo-label {
+            display: none;
+        }
+
+        .header-section {
+            padding: 20px;
+            border-bottom: 2px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: 1fr 140px 1fr;
+            width: 100%;
+            align-items: center;
+        }
+
+        .team-name { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; margin-top: 5px; }
+
+        .score-box {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: rgba(0,0,0,0.4);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: 160px 1fr 160px;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-label { text-align: center; text-transform: uppercase; font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
+
+        .control-group { display: flex; align-items: center; gap: 10px; justify-content: center; }
+        
+        .btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-plus { background: #1e293b; border: 1px solid #334155; }
+        .btn-minus { background: var(--danger); }
+
+        .val-display { font-size: 1.5rem; font-weight: bold; min-width: 45px; text-align: center; color: var(--accent-blue); }
+
+        .footer-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .export-btn {
+            padding: 12px 20px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            text-transform: uppercase;
+        }
+        .btn-img { background: #10b981; color: white; }
+        .btn-html { background: #6366f1; color: white; }
+
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="main-container" id="capture-area">
+    <div class="header-section">
+        <div class="champ-area">
+            <label class="logo-upload-container has-image" id="container-champ">
+                <img id="preview-champ" class="logo-preview" src="blob:null/351fd8b0-375e-4e16-852e-44741de9a5a0">
+                <span class="logo-label">Logo Campeonato</span>
+                <input type="file" onchange="loadFile(event, 'preview-champ', 'container-champ')">
+            </label>
+            <input type="text" id="champ-name" class="editable" style="color: var(--accent-blue); font-weight: bold; font-size: 1.2rem;" value="NOME DO CAMPEONATO">
+        </div>
+        
+        <div class="teams-grid">
+            <div>
+                <label class="logo-upload-container" id="container-a">
+                    <img id="preview-a" class="logo-preview no-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23555' d='M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z' /%3E%3C/svg%3E">
+                    <span class="logo-label">Logo Time A</span>
+                    <input type="file" onchange="loadFile(event, 'preview-a', 'container-a')">
+                </label>
+                <input type="text" id="team-a-name" class="editable team-name" value="TIME A">
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="changeScore('a', -1)">-</button>
+                    <button class="btn btn-plus" onclick="changeScore('a', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="score-box">
+                <span id="score-a">1</span>:<span id="score-b">0</span>
+            </div>
+
+            <div>
+                <label class="logo-upload-container" id="container-b">
+                    <img id="preview-b" class="logo-preview no-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23555' d='M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z' /%3E%3C/svg%3E">
+                    <span class="logo-label">Logo Time B</span>
+                    <input type="file" onchange="loadFile(event, 'preview-b', 'container-b')">
+                </label>
+                <input type="text" id="team-b-name" class="editable team-name" value="TIME B">
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="changeScore('b', -1)">-</button>
+                    <button class="btn btn-plus" onclick="changeScore('b', 1)">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="stats-body"><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('shots', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-shots">0</div>
+                    <button class="btn btn-minus" onclick="update('shots', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Chutes</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('shots', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-shots">0</div>
+                    <button class="btn btn-plus" onclick="update('shots', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('onTarget', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-onTarget">1</div>
+                    <button class="btn btn-minus" onclick="update('onTarget', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Chutes a Gol</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('onTarget', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-onTarget">0</div>
+                    <button class="btn btn-plus" onclick="update('onTarget', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('possession', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-possession">51%</div>
+                    <button class="btn btn-minus" onclick="update('possession', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Posse de Bola %</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('possession', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-possession">49%</div>
+                    <button class="btn btn-plus" onclick="update('possession', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('passes', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-passes">2</div>
+                    <button class="btn btn-minus" onclick="update('passes', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Passes</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('passes', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-passes">0</div>
+                    <button class="btn btn-plus" onclick="update('passes', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('passAcc', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-passAcc">1%</div>
+                    <button class="btn btn-minus" onclick="update('passAcc', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Precisão de Passe %</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('passAcc', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-passAcc">0%</div>
+                    <button class="btn btn-plus" onclick="update('passAcc', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('fouls', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-fouls">2</div>
+                    <button class="btn btn-minus" onclick="update('fouls', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Faltas</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('fouls', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-fouls">0</div>
+                    <button class="btn btn-plus" onclick="update('fouls', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('yellow', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-yellow">1</div>
+                    <button class="btn btn-minus" onclick="update('yellow', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Cartões Amarelos</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('yellow', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-yellow">0</div>
+                    <button class="btn btn-plus" onclick="update('yellow', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('red', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-red">1</div>
+                    <button class="btn btn-minus" onclick="update('red', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Cartões Vermelhos</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('red', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-red">0</div>
+                    <button class="btn btn-plus" onclick="update('red', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('offside', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-offside">1</div>
+                    <button class="btn btn-minus" onclick="update('offside', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Impedimentos</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('offside', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-offside">0</div>
+                    <button class="btn btn-plus" onclick="update('offside', 'b', 1)">+</button>
+                </div></div><div class="stat-row">
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('corners', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-corners">1</div>
+                    <button class="btn btn-minus" onclick="update('corners', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">Escanteios</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('corners', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-corners">0</div>
+                    <button class="btn btn-plus" onclick="update('corners', 'b', 1)">+</button>
+                </div></div></div>
+</div>
+
+<div class="footer-actions">
+    <button class="export-btn btn-img" onclick="exportAsImage()">Salvar PNG</button>
+    <button class="export-btn btn-html" onclick="exportAsHTML()">Salvar Relatório HTML</button>
+</div>
+
+<script>
+    const metrics = [
+        { id: 'shots', label: 'Chutes' },
+        { id: 'onTarget', label: 'Chutes a Gol' },
+        { id: 'possession', label: 'Posse de Bola %', isPct: true },
+        { id: 'passes', label: 'Passes' },
+        { id: 'passAcc', label: 'Precisão de Passe %', isPct: true },
+        { id: 'fouls', label: 'Faltas' },
+        { id: 'yellow', label: 'Cartões Amarelos' },
+        { id: 'red', label: 'Cartões Vermelhos' },
+        { id: 'offside', label: 'Impedimentos' },
+        { id: 'corners', label: 'Escanteios' }
+    ];
+
+    const data = { a: {}, b: {}, scoreA: 0, scoreB: 0 };
+
+    function init() {
+        const body = document.getElementById('stats-body');
+        metrics.forEach(m => {
+            data.a[m.id] = m.id === 'possession' ? 50 : 0;
+            data.b[m.id] = m.id === 'possession' ? 50 : 0;
+            const row = document.createElement('div');
+            row.className = 'stat-row';
+            row.innerHTML = `
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('${m.id}', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-${m.id}">${data.a[m.id]}${m.isPct?'%':''}</div>
+                    <button class="btn btn-minus" onclick="update('${m.id}', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">${m.label}</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('${m.id}', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-${m.id}">${data.b[m.id]}${m.isPct?'%':''}</div>
+                    <button class="btn btn-plus" onclick="update('${m.id}', 'b', 1)">+</button>
+                </div>`;
+            body.appendChild(row);
+        });
+    }
+
+    function update(id, team, val) {
+        data[team][id] = Math.max(0, data[team][id] + val);
+        if(id === 'possession') {
+            const other = team === 'a' ? 'b' : 'a';
+            data[other].possession = 100 - data[team].possession;
+            document.getElementById('val-a-possession').innerText = data.a.possession + '%';
+            document.getElementById('val-b-possession').innerText = data.b.possession + '%';
+        } else {
+            const isPct = metrics.find(m => m.id === id).isPct;
+            document.getElementById(`val-${team}-${id}`).innerText = data[team][id] + (isPct ? '%' : '');
+        }
+    }
+
+    function changeScore(team, val) {
+        if(team === 'a') data.scoreA = Math.max(0, data.scoreA + val);
+        else data.scoreB = Math.max(0, data.scoreB + val);
+        document.getElementById('score-a').innerText = data.scoreA;
+        document.getElementById('score-b').innerText = data.scoreB;
+    }
+
+    // CARREGAR IMAGEM E LIMPAR TEXTOS DE AJUDA
+    function loadFile(event, previewId, containerId) {
+        const output = document.getElementById(previewId);
+        const container = document.getElementById(containerId);
+        
+        output.src = URL.createObjectURL(event.target.files[0]);
+        output.classList.remove('no-image'); // Remove a borda pontilhada
+        container.classList.add('has-image'); // Esconde o texto da legenda
+    }
+
+    function exportAsImage() {
+        const area = document.getElementById('capture-area');
+        html2canvas(area, { backgroundColor: '#0b111a', scale: 2 }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = 'estatisticas-final.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        });
+    }
+
+    function exportAsHTML() {
+        const content = document.documentElement.outerHTML;
+        const blob = new Blob([content], { type: 'text/html' });
+        const link = document.createElement('a');
+        link.download = 'relatorio-partida.html';
+        link.href = window.URL.createObjectURL(blob);
+        link.click();
+    }
+
+    init();
+</script>
+
+</body></html>

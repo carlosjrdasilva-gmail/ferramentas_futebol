@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estatísticas Pro - Final</title>
+    <style>
+        :root {
+            --bg-dark: #0b111a;
+            --panel-bg: rgba(16, 24, 39, 0.95);
+            --accent-blue: #00d2ff;
+            --danger: #ef4444;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg-dark);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--panel-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .editable {
+            background: transparent;
+            border: 1px dashed transparent;
+            color: white;
+            text-align: center;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .editable:hover { border-color: var(--accent-blue); }
+        .editable:focus { border-color: var(--accent-blue); outline: none; background: rgba(255,255,255,0.05); }
+
+        /* Upload de Logos */
+        .logo-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .logo-preview {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            border: 1px dashed #555;
+            border-radius: 8px;
+            padding: 5px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .logo-label { font-size: 0.65rem; color: #888; margin-top: 5px; text-transform: uppercase; }
+
+        /* Cabeçalho */
+        .header-section {
+            padding: 20px;
+            border-bottom: 2px solid var(--glass-border);
+            text-align: center;
+        }
+
+        .champ-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: 1fr 140px 1fr;
+            width: 100%;
+            align-items: center;
+        }
+
+        .team-name { font-size: 1.6rem; font-weight: 800; text-transform: uppercase; }
+
+        .score-box {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: rgba(0,0,0,0.4);
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Tabela de Stats */
+        .stat-row {
+            display: grid;
+            grid-template-columns: 160px 1fr 160px;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .stat-label { text-align: center; text-transform: uppercase; font-size: 0.8rem; color: #94a3b8; letter-spacing: 1px; }
+
+        /* Controles (+ -) */
+        .control-group { display: flex; align-items: center; gap: 12px; justify-content: center; }
+        
+        .btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-plus { background: #1e293b; border: 1px solid #334155; }
+        .btn-plus:hover { background: var(--accent-blue); color: black; }
+        .btn-minus { background: var(--danger); opacity: 0.8; }
+        .btn-minus:hover { opacity: 1; }
+        .btn-reset { 
+            background: #475569; 
+            opacity: 0.7;
+            font-size: 0.7rem;
+            width: auto;
+            padding: 0 10px;
+        }
+        .btn-reset:hover { background: #64748b; opacity: 1; }
+
+        .val-display { font-size: 1.5rem; font-weight: bold; min-width: 45px; text-align: center; color: var(--accent-blue); }
+
+        /* Botão Exportar */
+        .footer-actions {
+            padding: 20px;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            background: var(--accent-blue);
+            color: #0b111a;
+            border: none;
+            padding: 12px 24px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .export-btn:hover { background: white; }
+        
+        .export-btn.secondary {
+            background: #475569;
+            color: white;
+        }
+        
+        .export-btn.secondary:hover {
+            background: #64748b;
+        }
+
+        input[type="file"] { display: none; }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: var(--panel-bg);
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid var(--glass-border);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+        }
+        
+        .modal-textarea {
+            width: 100%;
+            height: 200px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            margin-top: 15px;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1001;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* Barra de Progresso */
+        .progress-container {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-blue);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        /* Time Controls */
+        .time-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .time-btn {
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .time-btn:hover {
+            background: #334155;
+        }
+        
+        .time-display {
+            font-size: 0.9rem;
+            color: #94a3b8;
+            margin-top: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="header-section">
+        <div class="champ-area">
+            <label class="logo-upload-container">
+                <img id="preview-champ" class="logo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23555' d='M19,5V7H15V5H19M9,5V7H5V5H9M21,3H13V9H21V3M11,3H3V9H11V3M17,17V19H13V17H17M7,17V19H3V17H7M19,15H11V21H19V15M9,15H1V21H9V15Z' /%3E%3C/svg%3E">
+                <span class="logo-label">Logo Campeonato</span>
+                <input type="file" onchange="loadFile(event, 'preview-champ')">
+            </label>
+            <input type="text" id="champ-name" class="editable" style="font-size: 1.1rem; color: var(--accent-blue); font-weight: bold;" value="NOME DO CAMPEONATO">
+        </div>
+        
+        <div class="teams-grid">
+            <div>
+                <label class="logo-upload-container">
+                    <img id="preview-a" class="logo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23555' d='M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z' /%3E%3C/svg%3E">
+                    <span class="logo-label">Logo Time A</span>
+                    <input type="file" onchange="loadFile(event, 'preview-a')">
+                </label>
+                <input type="text" id="team-a-name" class="editable team-name" value="TIME A">
+                <div class="control-group" style="margin-top: 10px;">
+                    <button class="btn btn-minus" onclick="changeScore('a', -1)">-</button>
+                    <button class="btn btn-plus" onclick="changeScore('a', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="score-box">
+                <span id="score-a">0</span>:<span id="score-b">0</span>
+            </div>
+
+            <div>
+                <label class="logo-upload-container">
+                    <img id="preview-b" class="logo-preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23555' d='M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z' /%3E%3C/svg%3E">
+                    <span class="logo-label">Logo Time B</span>
+                    <input type="file" onchange="loadFile(event, 'preview-b')">
+                </label>
+                <input type="text" id="team-b-name" class="editable team-name" value="TIME B">
+                <div class="control-group" style="margin-top: 10px;">
+                    <button class="btn btn-minus" onclick="changeScore('b', -1)">-</button>
+                    <button class="btn btn-plus" onclick="changeScore('b', 1)">+</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controles de Tempo -->
+        <div class="time-controls">
+            <button class="time-btn" onclick="setMatchTime('1T')">1º Tempo</button>
+            <button class="time-btn" onclick="setMatchTime('2T')">2º Tempo</button>
+            <button class="time-btn" onclick="setMatchTime('FT')">Fim de Jogo</button>
+            <button class="time-btn" onclick="setMatchTime('PEN')">Pênaltis</button>
+        </div>
+        <div class="time-display" id="match-time">Status: Não iniciado</div>
+    </div>
+
+    <div id="stats-body"></div>
+
+    <div class="footer-actions">
+        <button class="export-btn" onclick="exportReport()">Exportar Relatório Final</button>
+        <button class="export-btn secondary" onclick="showImportExportModal()">Importar/Exportar JSON</button>
+        <button class="export-btn secondary" onclick="resetAllStats()">Resetar Tudo</button>
+    </div>
+</div>
+
+<!-- Modal para Importar/Exportar JSON -->
+<div id="jsonModal" class="modal">
+    <div class="modal-content">
+        <h3>Importar/Exportar Dados JSON</h3>
+        <p>Copie o JSON abaixo para salvar ou cole um JSON para carregar dados:</p>
+        <textarea id="jsonData" class="modal-textarea" placeholder="Cole ou edite o JSON aqui..."></textarea>
+        <div class="modal-actions">
+            <button class="export-btn" onclick="exportJSON()">Copiar JSON</button>
+            <button class="export-btn secondary" onclick="importJSON()">Importar JSON</button>
+            <button class="export-btn" onclick="closeModal()">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de confirmação -->
+<div id="toast" class="toast"></div>
+
+<script>
+    const metrics = [
+        { id: 'shots', label: 'Chutes' },
+        { id: 'onTarget', label: 'Chutes a Gol' },
+        { id: 'possession', label: 'Posse de Bola %', isPct: true },
+        { id: 'passes', label: 'Passes' },
+        { id: 'passAcc', label: 'Precisão de Passe %', isPct: true },
+        { id: 'fouls', label: 'Faltas' },
+        { id: 'yellow', label: 'Cartões Amarelos' },
+        { id: 'red', label: 'Cartões Vermelhos' },
+        { id: 'offside', label: 'Impedimentos' },
+        { id: 'corners', label: 'Escanteios' }
+    ];
+
+    const data = { 
+        a: {}, 
+        b: {}, 
+        scoreA: 0, 
+        scoreB: 0,
+        matchTime: 'Não iniciado',
+        lastUpdate: new Date().toISOString()
+    };
+
+    function init() {
+        const body = document.getElementById('stats-body');
+        metrics.forEach(m => {
+            data.a[m.id] = m.id === 'possession' ? 50 : 0;
+            data.b[m.id] = m.id === 'possession' ? 50 : 0;
+            const row = document.createElement('div');
+            row.className = 'stat-row';
+            row.innerHTML = `
+                <div class="control-group">
+                    <button class="btn btn-plus" onclick="update('${m.id}', 'a', 1)">+</button>
+                    <div class="val-display" id="val-a-${m.id}">${data.a[m.id]}${m.isPct?'%':''}</div>
+                    <button class="btn btn-minus" onclick="update('${m.id}', 'a', -1)">-</button>
+                </div>
+                <div class="stat-label">${m.label}</div>
+                <div class="control-group">
+                    <button class="btn btn-minus" onclick="update('${m.id}', 'b', -1)">-</button>
+                    <div class="val-display" id="val-b-${m.id}">${data.b[m.id]}${m.isPct?'%':''}</div>
+                    <button class="btn btn-plus" onclick="update('${m.id}', 'b', 1)">+</button>
+                </div>`;
+            body.appendChild(row);
+        });
+        
+        // Auto-save
+        setInterval(autoSave, 30000); // Salva a cada 30 segundos
+        loadAutoSave();
+    }
+
+    function update(id, team, val) {
+        data[team][id] = Math.max(0, data[team][id] + val);
+        if(id === 'possession') {
+            const other = team === 'a' ? 'b' : 'a';
+            data[other].possession = 100 - data[team].possession;
+            document.getElementById('val-a-possession').innerText = data.a.possession + '%';
+            document.getElementById('val-b-possession').innerText = data.b.possession + '%';
+        } else {
+            const isPct = metrics.find(m => m.id === id).isPct;
+            document.getElementById(`val-${team}-${id}`).innerText = data[team][id] + (isPct ? '%' : '');
+        }
+        data.lastUpdate = new Date().toISOString();
+    }
+
+    function changeScore(team, val) {
+        if(team === 'a') data.scoreA = Math.max(0, data.scoreA + val);
+        else data.scoreB = Math.max(0, data.scoreB + val);
+        document.getElementById('score-a').innerText = data.scoreA;
+        document.getElementById('score-b').innerText = data.scoreB;
+        data.lastUpdate = new Date().toISOString();
+    }
+
+    function setMatchTime(status) {
+        data.matchTime = status;
+        document.getElementById('match-time').innerText = `Status: ${status}`;
+        showToast(`Tempo alterado para: ${status}`);
+    }
+
+    function loadFile(event, previewId) {
+        var output = document.getElementById(previewId);
+        output.src = URL.createObjectURL(event.target.files[0]);
+        output.style.border = "none";
+        data.lastUpdate = new Date().toISOString();
+    }
+
+    function exportReport() {
+        const champ = document.getElementById('champ-name').value;
+        const teamA = document.getElementById('team-a-name').value;
+        const teamB = document.getElementById('team-b-name').value;
+        
+        let report = `RELATÓRIO DE PARTIDA - ${champ}\n`;
+        report += `====================================\n`;
+        report += `${teamA} ${data.scoreA} x ${data.scoreB} ${teamB}\n`;
+        report += `Tempo: ${data.matchTime}\n`;
+        report += `Data: ${new Date().toLocaleString('pt-BR')}\n`;
+        report += `====================================\n\n`;
+        report += `ESTATÍSTICAS:\n`;
+        
+        metrics.forEach(m => {
+            const valA = data.a[m.id] + (m.isPct ? '%' : '');
+            const valB = data.b[m.id] + (m.isPct ? '%' : '');
+            report += `${m.label}: ${teamA} ${valA} | ${valB} ${teamB}\n`;
+        });
+
+        const blob = new Blob([report], { type: 'text/plain' });
+        const anchor = document.createElement('a');
+        anchor.download = `estatisticas_${teamA}_vs_${teamB}.txt`;
+        anchor.href = window.URL.createObjectURL(blob);
+        anchor.click();
+        
+        showToast('Relatório exportado com sucesso!');
+    }
+
+    function showImportExportModal() {
+        const modal = document.getElementById('jsonModal');
+        const textarea = document.getElementById('jsonData');
+        
+        const exportData = {
+            championship: document.getElementById('champ-name').value,
+            teamA: {
+                name: document.getElementById('team-a-name').value,
+                score: data.scoreA,
+                stats: data.a
+            },
+            teamB: {
+                name: document.getElementById('team-b-name').value,
+                score: data.scoreB,
+                stats: data.b
+            },
+            matchTime: data.matchTime,
+            lastUpdate: data.lastUpdate
+        };
+        
+        textarea.value = JSON.stringify(exportData, null, 2);
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('jsonModal').style.display = 'none';
+    }
+
+    function exportJSON() {
+        const textarea = document.getElementById('jsonData');
+        textarea.select();
+        document.execCommand('copy');
+        showToast('JSON copiado para a área de transferência!');
+    }
+
+    function importJSON() {
+        const textarea = document.getElementById('jsonData');
+        try {
+            const imported = JSON.parse(textarea.value);
+            
+            // Atualizar dados
+            document.getElementById('champ-name').value = imported.championship || 'NOME DO CAMPEONATO';
+            document.getElementById('team-a-name').value = imported.teamA.name || 'TIME A';
+            document.getElementById('team-b-name').value = imported.teamB.name || 'TIME B';
+            
+            data.scoreA = imported.teamA.score || 0;
+            data.scoreB = imported.teamB.score || 0;
+            data.matchTime = imported.matchTime || 'Não iniciado';
+            data.a = imported.teamA.stats || {};
+            data.b = imported.teamB.stats || {};
+            
+            // Atualizar UI
+            document.getElementById('score-a').innerText = data.scoreA;
+            document.getElementById('score-b').innerText = data.scoreB;
+            document.getElementById('match-time').innerText = `Status: ${data.matchTime}`;
+            
+            metrics.forEach(m => {
+                if (data.a[m.id] !== undefined) {
+                    document.getElementById(`val-a-${m.id}`).innerText = data.a[m.id] + (m.isPct ? '%' : '');
+                }
+                if (data.b[m.id] !== undefined) {
+                    document.getElementById(`val-b-${m.id}`).innerText = data.b[m.id] + (m.isPct ? '%' : '');
+                }
+            });
+            
+            showToast('Dados importados com sucesso!');
+            closeModal();
+            
+        } catch (e) {
+            showToast('Erro: JSON inválido!', true);
+        }
+    }
+
+    function resetAllStats() {
+        if (confirm('Tem certeza que deseja resetar todas as estatísticas?')) {
+            data.scoreA = 0;
+            data.scoreB = 0;
+            data.matchTime = 'Não iniciado';
+            
+            metrics.forEach(m => {
+                data.a[m.id] = m.id === 'possession' ? 50 : 0;
+                data.b[m.id] = m.id === 'possession' ? 50 : 0;
+                
+                document.getElementById(`val-a-${m.id}`).innerText = data.a[m.id] + (m.isPct ? '%' : '');
+                document.getElementById(`val-b-${m.id}`).innerText = data.b[m.id] + (m.isPct ? '%' : '');
+            });
+            
+            document.getElementById('score-a').innerText = '0';
+            document.getElementById('score-b').innerText = '0';
+            document.getElementById('match-time').innerText = 'Status: Não iniciado';
+            
+            showToast('Todas as estatísticas foram resetadas!');
+        }
+    }
+
+    function autoSave() {
+        const saveData = {
+            championship: document.getElementById('champ-name').value,
+            teamA: {
+                name: document.getElementById('team-a-name').value,
+                score: data.scoreA,
+                stats: data.a
+            },
+            teamB: {
+                name: document.getElementById('team-b-name').value,
+                score: data.scoreB,
+                stats: data.b
+            },
+            matchTime: data.matchTime,
+            lastUpdate: new Date().toISOString()
+        };
+        
+        localStorage.setItem('footballStatsAutoSave', JSON.stringify(saveData));
+    }
+
+    function loadAutoSave() {
+        const saved = localStorage.getItem('footballStatsAutoSave');
+        if (saved) {
+            try {
+                const imported = JSON.parse(saved);
+                if (confirm('Dados salvos automaticamente encontrados. Deseja carregá-los?')) {
+                    // Similar ao importJSON mas sem mostrar modal
+                    document.getElementById('champ-name').value = imported.championship || 'NOME DO CAMPEONATO';
+                    document.getElementById('team-a-name').value = imported.teamA.name || 'TIME A';
+                    document.getElementById('team-b-name').value = imported.teamB.name || 'TIME B';
+                    
+                    data.scoreA = imported.teamA.score || 0;
+                    data.scoreB = imported.teamB.score || 0;
+                    data.matchTime = imported.matchTime || 'Não iniciado';
+                    data.a = imported.teamA.stats || {};
+                    data.b = imported.teamB.stats || {};
+                    
+                    document.getElementById('score-a').innerText = data.scoreA;
+                    document.getElementById('score-b').innerText = data.scoreB;
+                    document.getElementById('match-time').innerText = `Status: ${data.matchTime}`;
+                    
+                    metrics.forEach(m => {
+                        if (data.a[m.id] !== undefined) {
+                            document.getElementById(`val-a-${m.id}`).innerText = data.a[m.id] + (m.isPct ? '%' : '');
+                        }
+                        if (data.b[m.id] !== undefined) {
+                            document.getElementById(`val-b-${m.id}`).innerText = data.b[m.id] + (m.isPct ? '%' : '');
+                        }
+                    });
+                    
+                    showToast('Dados recuperados do auto-save!');
+                }
+            } catch (e) {
+                console.error('Erro ao carregar auto-save:', e);
+            }
+        }
+    }
+
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.background = isError ? 'var(--danger)' : 'var(--success)';
+        toast.style.display = 'block';
+        
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+
+    // Fechar modal com ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    init();
+</script>
+</body>
+</html>

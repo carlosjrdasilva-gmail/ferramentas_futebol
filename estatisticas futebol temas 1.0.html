@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Estatísticas - Futebol</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #1e3a8a;
+            --secondary-color: #3b82f6;
+            --home-color: #2563eb;
+            --away-color: #dc2626;
+            --background-color: #f8fafc;
+            --card-color: #ffffff;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        .dark-theme {
+            --primary-color: #1e40af;
+            --secondary-color: #60a5fa;
+            --home-color: #3b82f6;
+            --away-color: #f87171;
+            --background-color: #0f172a;
+            --card-color: #1e293b;
+            --text-color: #f1f5f9;
+            --border-color: #334155;
+            --success-color: #34d399;
+            --warning-color: #fbbf24;
+            --danger-color: #f87171;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: var(--card-color);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 25px;
+        }
+
+        /* Cabeçalho da Partida */
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 15px;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 30%;
+        }
+
+        .team-logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid white;
+            overflow: hidden;
+        }
+
+        .default-logo {
+            font-size: 60px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .team-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .team-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .team-name-input {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 300px;
+            transition: border-color 0.3s;
+        }
+
+        .team-name-input:focus {
+            outline: none;
+            border-color: white;
+        }
+
+        .upload-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .upload-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: white;
+        }
+
+        /* Informações do Jogo */
+        .match-info {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .score {
+            font-size: 5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .vs {
+            font-size: 3rem;
+            opacity: 0.8;
+        }
+
+        .match-time {
+            font-size: 1.8rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 30px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .match-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: white;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Painel de Estatísticas */
+        .stats-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .stats-panel {
+            flex: 1;
+            background: var(--card-color);
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .stats-panel h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--border-color);
+            font-size: 1.8rem;
+            color: var(--text-color);
+        }
+
+        .home-stats h3 {
+            color: var(--home-color);
+            border-bottom-color: var(--home-color);
+        }
+
+        .away-stats h3 {
+            color: var(--away-color);
+            border-bottom-color: var(--away-color);
+        }
+
+        .stats-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .stat-item {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .home-stats .stat-value {
+            color: var(--home-color);
+        }
+
+        .away-stats .stat-value {
+            color: var(--away-color);
+        }
+
+        .yellow-card {
+            color: #d97706;
+            font-weight: 800;
+        }
+
+        .red-card {
+            color: #dc2626;
+            font-weight: 800;
+        }
+
+        /* Barras de Progresso */
+        .progress-bar {
+            height: 12px;
+            background: var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .home-progress {
+            background: linear-gradient(90deg, var(--home-color), #60a5fa);
+        }
+
+        .away-progress {
+            background: linear-gradient(90deg, var(--away-color), #f87171);
+        }
+
+        /* Controles de Estatísticas */
+        .stat-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .stat-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-btn.plus {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .stat-btn.minus {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .stat-btn.yellow, .stat-btn.red {
+            background: transparent;
+            border: 2px solid;
+            font-size: 1.5rem;
+        }
+
+        .stat-btn.yellow {
+            border-color: #d97706;
+        }
+
+        .stat-btn.red {
+            border-color: #dc2626;
+        }
+
+        .stat-btn:hover {
+            transform: scale(1.1);
+            opacity: 0.9;
+        }
+
+        .separator {
+            color: var(--border-color);
+            font-weight: bold;
+            margin: 0 5px;
+        }
+
+        /* Rodapé com Controles */
+        .controls-footer {
+            background: var(--card-color);
+            border: 2px solid var(--border-color);
+            border-radius: 15px;
+            padding: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .advanced-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .advanced-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .advanced-btn:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+
+        .match-info-display {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .info-item input {
+            width: 70px;
+            padding: 10px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: var(--background-color);
+            color: var(--text-color);
+        }
+
+        /* Responsividade */
+        @media (max-width: 1200px) {
+            .stats-container {
+                flex-direction: column;
+            }
+            
+            .score {
+                font-size: 4rem;
+            }
+            
+            .team-logo {
+                width: 100px;
+                height: 100px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .match-header {
+                flex-direction: column;
+                gap: 30px;
+            }
+            
+            .team {
+                width: 100%;
+            }
+            
+            .controls-footer {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .match-info-display {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .score {
+                font-size: 3rem;
+                gap: 20px;
+            }
+        }
+
+        /* Animações */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .score-change {
+            animation: pulse 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Cabeçalho com informações dos times -->
+        <header class="match-header">
+            <div class="team home-team">
+                <div class="team-logo" id="home-logo">
+                    <i class="fas fa-shield-alt default-logo"></i>
+                    <img src="" alt="Logo Time Casa" id="home-logo-img" style="display: none;">
+                </div>
+                <div class="team-info">
+                    <input type="text" id="home-team-name" class="team-name-input" value="Time Casa" maxlength="20">
+                    <button class="upload-btn" onclick="uploadLogo('home')">
+                        <i class="fas fa-upload"></i> Logo
+                    </button>
+                </div>
+            </div>
+
+            <div class="match-info">
+                <div class="score">
+                    <span id="home-score">0</span>
+                    <span class="vs">x</span>
+                    <span id="away-score">0</span>
+                </div>
+                <div class="match-time">
+                    <span id="match-minute">00:00</span>
+                </div>
+                <div class="match-controls">
+                    <button id="start-match" class="control-btn"><i class="fas fa-play"></i></button>
+                    <button id="pause-match" class="control-btn"><i class="fas fa-pause"></i></button>
+                    <button id="reset-match" class="control-btn"><i class="fas fa-redo"></i></button>
+                </div>
+            </div>
+
+            <div class="team away-team">
+                <div class="team-logo" id="away-logo">
+                    <i class="fas fa-shield-alt default-logo"></i>
+                    <img src="" alt="Logo Time Visitante" id="away-logo-img" style="display: none;">
+                </div>
+                <div class="team-info">
+                    <input type="text" id="away-team-name" class="team-name-input" value="Time Visitante" maxlength="20">
+                    <button class="upload-btn" onclick="uploadLogo('away')">
+                        <i class="fas fa-upload"></i> Logo
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Painel principal de estatísticas -->
+        <main class="stats-container">
+            <!-- Estatísticas do time da casa -->
+            <section class="stats-panel home-stats">
+                <h3 id="home-team-title">TIME CASA</h3>
+                
+                <div class="stats-grid">
+                    <!-- Posse de Bola -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Posse de Bola</span>
+                            <span class="stat-value" id="home-possession">50%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill home-progress" style="width: 50%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Finalizações -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Finalizações</span>
+                            <span class="stat-value">
+                                <span id="home-shots">0</span> / <span id="home-shots-target">0</span>
+                            </span>
+                        </div>
+                        <div class="stat-controls">
+                            <button class="stat-btn minus" onclick="updateStat('home', 'shots', -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="stat-btn plus" onclick="updateStat('home', 'shots', 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <span class="separator">|</span>
+                            <button class="stat-btn minus" onclick="updateStat('home', 'shotsTarget', -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="stat-btn plus" onclick="updateStat('home', 'shotsTarget', 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Escanteios -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Escanteios</span>
+                            <span class="stat-value" id="home-corners">0</span>
+                        </div>
+                        <div class="stat-controls">
+                            <button class="stat-btn minus" onclick="updateStat('home', 'corners', -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="stat-btn plus" onclick="updateStat('home', 'corners', 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Faltas -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Faltas</span>
+                            <span class="stat-value" id="home-fouls">0</span>
+                        </div>
+                        <div class="stat-controls">
+                            <button class="stat-btn minus" onclick="updateStat('home', 'fouls', -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="stat-btn plus" onclick="updateStat('home', 'fouls', 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cartões -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Cartões</span>
+                            <span class="stat-value">
+                                <span class="yellow-card" id="home-yellow">0</span> / 
+                                <span class="red-card" id="home-red">0</span>
+                            </span>
+                        </div>
+                        <div class="stat-controls">
+                            <button class="stat-btn yellow" onclick="updateCard('home', 'yellow', 1)">
+                                <i class="fas fa-square" style="color: #FFD700;"></i>
+                            </button>
+                            <button class="stat-btn red" onclick="updateCard('home', 'red', 1)">
+                                <i class="fas fa-square" style="color: #FF0000;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Estatísticas do time visitante -->
+            <section class="stats-panel away-stats">
+                <h3 id="away-team-title">TIME VISITANTE</h3>
+                
+                <div class="stats-grid">
+                    <!-- Posse de Bola -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Posse de Bola</span>
+                            <span class="stat-value" id="away-possession">50%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill away-progress" style="width: 50%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Finalizações -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Finalizações</span>
+                            <span class="stat-value">
+                                <span id="away-shots">0</span> / <span id="away-shots-target">0</span>
+                            </span>
+                        </div>
+                        <div class="stat-controls">
+                            <button class="stat-btn minus" onclick="updateStat('away', 'shots', -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="stat-btn plus" onclick="updateStat('away', 'shots', 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <span class="separator">|</span>
+                            <button class="stat-btn minus" onclick="updateStat('away', 'shotsTarget', -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="stat-btn plus" onclick="updateStat('away', 'shotsTarget', 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Escanteios -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Escanteios</span>
+                            <span class="stat-value" id="away-corners">0</span>
+                        </div>
+                        <div class="stat-controls">
+                            <button class="stat-btn minus" onclick="updateStat('away', 'corners', -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="stat-btn plus" onclick="updateStat('away', 'corners', 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Faltas -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Faltas</span>
+                            <span class="stat-value" id="away-fouls">0</span>
+                        </div>
+                        <div class="stat-controls">
+                            <button class="stat-btn minus" onclick="updateStat('away', 'fouls', -1)">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <button class="stat-btn plus" onclick="updateStat('away', 'fouls', 1)">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Cartões -->
+                    <div class="stat-item">
+                        <div class="stat-header">
+                            <span class="stat-title">Cartões</span>
+                            <span class="stat-value">
+                                <span class="yellow-card" id="away-yellow">0</span> / 
+                                <span class="red-card" id="away-red">0</span>
+                            </span>
+                        </div>
+                        <div class="stat-controls">
+                            <button class="stat-btn yellow" onclick="updateCard('away', 'yellow', 1)">
+                                <i class="fas fa-square" style="color: #FFD700;"></i>
+                            </button>
+                            <button class="stat-btn red" onclick="updateCard('away', 'red', 1)">
+                                <i class="fas fa-square" style="color: #FF0000;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Controles avançados -->
+        <footer class="controls-footer">
+            <div class="advanced-controls">
+                <button class="advanced-btn" onclick="resetAllStats()">
+                    <i class="fas fa-trash-alt"></i> Resetar Tudo
+                </button>
+                <button class="advanced-btn" onclick="exportStats()">
+                    <i class="fas fa-download"></i> Exportar Dados
+                </button>
+                <button class="advanced-btn" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i> Tema Escuro
+                </button>
+            </div>
+            
+            <div class="match-info-display">
+                <div class="info-item">
+                    <span>Placar:</span>
+                    <input type="number" id="home-score-input" min="0" value="0" onchange="updateScore('home', this.value)">
+                    <span>x</span>
+                    <input type="number" id="away-score-input" min="0" value="0" onchange="updateScore('away', this.value)">
+                </div>
+                
+                <div class="info-item">
+                    <span>Tempo:</span>
+                    <input type="number" id="minute-input" min="0" max="120" value="0" onchange="updateMinute(this.value)">
+                    <span>min</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Input oculto para upload de logos -->
+    <input type="file" id="logo-upload" accept="image/*" style="display: none;">
+
+    <script>
+        // Objeto para armazenar as estatísticas
+        let matchStats = {
+            home: {
+                name: "Time Casa",
+                score: 0,
+                possession: 50,
+                shots: 0,
+                shotsTarget: 0,
+                corners: 0,
+                fouls: 0,
+                yellowCards: 0,
+                redCards: 0
+            },
+            away: {
+                name: "Time Visitante",
+                score: 0,
+                possession: 50,
+                shots: 0,
+                shotsTarget: 0,
+                corners: 0,
+                fouls: 0,
+                yellowCards: 0,
+                redCards: 0
+            },
+            matchTime: 0,
+            isMatchRunning: false,
+            timerInterval: null
+        };
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAllDisplays();
+            setupEventListeners();
+            
+            // Carregar dados salvos se existirem
+            loadSavedData();
+        });
+
+        // Configurar listeners de eventos
+        function setupEventListeners() {
+            // Controles do placar
+            document.getElementById('home-score-input').addEventListener('change', function(e) {
+                updateScore('home', parseInt(e.target.value) || 0);
+            });
+            
+            document.getElementById('away-score-input').addEventListener('change', function(e) {
+                updateScore('away', parseInt(e.target.value) || 0);
+            });
+            
+            // Controles do tempo
+            document.getElementById('minute-input').addEventListener('change', function(e) {
+                updateMinute(parseInt(e.target.value) || 0);
+            });
+            
+            // Nomes dos times
+            document.getElementById('home-team-name').addEventListener('input', function(e) {
+                matchStats.home.name = e.target.value;
+                document.getElementById('home-team-title').textContent = e.target.value.toUpperCase();
+                saveToLocalStorage();
+            });
+            
+            document.getElementById('away-team-name').addEventListener('input', function(e) {
+                matchStats.away.name = e.target.value;
+                document.getElementById('away-team-title').textContent = e.target.value.toUpperCase();
+                saveToLocalStorage();
+            });
+            
+            // Controles da partida
+            document.getElementById('start-match').addEventListener('click', startMatch);
+            document.getElementById('pause-match').addEventListener('click', pauseMatch);
+            document.getElementById('reset-match').addEventListener('click', resetMatch);
+            
+            // Upload de logos
+            document.getElementById('logo-upload').addEventListener('change', handleLogoUpload);
+        }
+
+        // Atualizar todas as exibições
+        function updateAllDisplays() {
+            // Atualizar placar
+            document.getElementById('home-score').textContent = matchStats.home.score;
+            document.getElementById('away-score').textContent = matchStats.away.score;
+            document.getElementById('home-score-input').value = matchStats.home.score;
+            document.getElementById('away-score-input').value = matchStats.away.score;
+            
+            // Atualizar tempo
+            updateTimeDisplay();
+            
+            // Atualizar estatísticas do time da casa
+            document.getElementById('home-possession').textContent = matchStats.home.possession + '%';
+            document.getElementById('home-shots').textContent = matchStats.home.shots;
+            document.getElementById('home-shots-target').textContent = matchStats.home.shotsTarget;
+            document.getElementById('home-corners').textContent = matchStats.home.corners;
+            document.getElementById('home-fouls').textContent = matchStats.home.fouls;
+            document.getElementById('home-yellow').textContent = matchStats.home.yellowCards;
+            document.getElementById('home-red').textContent = matchStats.home.redCards;
+            
+            // Atualizar estatísticas do time visitante
+            document.getElementById('away-possession').textContent = matchStats.away.possession + '%';
+            document.getElementById('away-shots').textContent = matchStats.away.shots;
+            document.getElementById('away-shots-target').textContent = matchStats.away.shotsTarget;
+            document.getElementById('away-corners').textContent = matchStats.away.corners;
+            document.getElementById('away-fouls').textContent = matchStats.away.fouls;
+            document.getElementById('away-yellow').textContent = matchStats.away.yellowCards;
+            document.getElementById('away-red').textContent = matchStats.away.redCards;
+            
+            // Atualizar barras de progresso
+            document.querySelector('.home-progress').style.width = matchStats.home.possession + '%';
+            document.querySelector('.away-progress').style.width = matchStats.away.possession + '%';
+        }
+
+        // Atualizar uma estatística específica
+        function updateStat(team, stat, value) {
+            if (team === 'home' || team === 'away') {
+                matchStats[team][stat] = Math.max(0, matchStats[team][stat] + value);
+                
+                // Atualizar posse de bola automaticamente baseado nas finalizações
+                if (stat === 'shots' || stat === 'shotsTarget') {
+                    updatePossession();
+                }
+                
+                updateAllDisplays();
+                saveToLocalStorage();
+            }
+        }
+
+        // Atualizar cartões
+        function updateCard(team, cardType, value) {
+            if (team === 'home' || team === 'away') {
+                const cardKey = cardType === 'yellow' ? 'yellowCards' : 'redCards';
+                matchStats[team][cardKey] = Math.max(0, matchStats[team][cardKey] + value);
+                updateAllDisplays();
+                saveToLocalStorage();
+            }
+        }
+
+        // Atualizar posse de bola
+        function updatePossession() {
+            const homeTotalShots = matchStats.home.shots + matchStats.home.shotsTarget;
+            const awayTotalShots = matchStats.away.shots + matchStats.away.shotsTarget;
+            const totalShots = homeTotalShots + awayTotalShots;
+            
+            if (totalShots > 0) {
+                matchStats.home.possession = Math.round((homeTotalShots / totalShots) * 100);
+                matchStats.away.possession = 100 - matchStats.home.possession;
+            } else {
+                matchStats.home.possession = 50;
+                matchStats.away.possession = 50;
+            }
+        }
+
+        // Atualizar placar
+        function updateScore(team, score) {
+            if (team === 'home' || team === 'away') {
+                matchStats[team].score = Math.max(0, parseInt(score) || 0);
+                
+                // Animação no placar
+                const scoreElement = document.getElementById(team === 'home' ? 'home-score' : 'away-score');
+                scoreElement.classList.remove('score-change');
+                void scoreElement.offsetWidth; // Trigger reflow
+                scoreElement.classList.add('score-change');
+                
+                updateAllDisplays();
+                saveToLocalStorage();
+            }
+        }
+
+        // Atualizar tempo
+        function updateMinute(minute) {
+            matchStats.matchTime = Math.max(0, Math.min(120, parseInt(minute) || 0));
+            updateTimeDisplay();
+            saveToLocalStorage();
+        }
+
+        // Atualizar exibição do tempo
+        function updateTimeDisplay() {
+            const minutes = Math.floor(matchStats.matchTime);
+            const seconds = Math.floor((matchStats.matchTime - minutes) * 60);
+            document.getElementById('match-minute').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('minute-input').value = minutes;
+        }
+
+        // Iniciar partida (cronômetro)
+        function startMatch() {
+            if (!matchStats.isMatchRunning) {
+                matchStats.isMatchRunning = true;
+                document.getElementById('start-match').disabled = true;
+                document.getElementById('pause-match').disabled = false;
+                
+                matchStats.timerInterval = setInterval(() => {
+                    matchStats.matchTime += 1/60; // Incrementa 1 segundo
+                    updateTimeDisplay();
+                }, 1000);
+            }
+        }
+
+        // Pausar partida
+        function pauseMatch() {
+            if (matchStats.isMatchRunning) {
+                matchStats.isMatchRunning = false;
+                clearInterval(matchStats.timerInterval);
+                document.getElementById('start-match').disabled = false;
+                document.getElementById('pause-match').disabled = true;
+            }
+        }
+
+        // Resetar partida
+        function resetMatch() {
+            if (confirm('Tem certeza que deseja resetar a partida? Todos os dados serão perdidos.')) {
+                matchStats = {
+                    home: {
+                        name: matchStats.home.name,
+                        score: 0,
+                        possession: 50,
+                        shots: 0,
+                        shotsTarget: 0,
+                        corners: 0,
+                        fouls: 0,
+                        yellowCards: 0,
+                        redCards: 0
+                    },
+                    away: {
+                        name: matchStats.away.name,
+                        score: 0,
+                        possession: 50,
+                        shots: 0,
+                        shotsTarget: 0,
+                        corners: 0,
+                        fouls: 0,
+                        yellowCards: 0,
+                        redCards: 0
+                    },
+                    matchTime: 0,
+                    isMatchRunning: false,
+                    timerInterval: null
+                };
+                
+                pauseMatch();
+                updateAllDisplays();
+                saveToLocalStorage();
+            }
+        }
+
+        // Upload de logos
+        function uploadLogo(team) {
+            const uploadInput = document.getElementById('logo-upload');
+            uploadInput.setAttribute('data-team', team);
+            uploadInput.click();
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            const team = event.target.getAttribute('data-team');
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const logoImg = document.getElementById(`${team}-logo-img`);
+                    const defaultIcon = document.querySelector(`#${team}-logo .default-logo`);
+                    
+                    logoImg.src = e.target.result;
+                    logoImg.style.display = 'block';
+                    
+                    if (defaultIcon) {
+                        defaultIcon.style.display = 'none';
+                    }
+                    
+                    // Salvar no localStorage (como data URL)
+                    localStorage.setItem(`${team}-logo`, e.target.result);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            // Resetar input
+            event.target.value = '';
+        }
+
+        // Resetar todas as estatísticas
+        function resetAllStats() {
+            if (confirm('Resetar todas as estatísticas (exceto placar e tempo)?')) {
+                matchStats.home.possession = 50;
+                matchStats.home.shots = 0;
+                matchStats.home.shotsTarget = 0;
+                matchStats.home.corners = 0;
+                matchStats.home.fouls = 0;
+                matchStats.home.yellowCards = 0;
+                matchStats.home.redCards = 0;
+                
+                matchStats.away.possession = 50;
+                matchStats.away.shots = 0;
+                matchStats.away.shotsTarget = 0;
+                matchStats.away.corners = 0;
+                matchStats.away.fouls = 0;
+                matchStats.away.yellowCards = 0;
+                matchStats.away.redCards = 0;
+                
+                updateAllDisplays();
+                saveToLocalStorage();
+            }
+        }
+
+        // Exportar dados
+        function exportStats() {
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                matchStats: matchStats,
+                summary: {
+                    totalShots: matchStats.home.shots + matchStats.home.shotsTarget + matchStats.away.shots + matchStats.away.shotsTarget,
+                    totalShotsOnTarget: matchStats.home.shotsTarget + matchStats.away.shotsTarget,
+                    totalCorners: matchStats.home.corners + matchStats.away.corners,
+                    totalFouls: matchStats.home.fouls + matchStats.away.fouls,
+                    totalCards: matchStats.home.yellowCards + matchStats.home.redCards + matchStats.away.yellowCards + matchStats.away.redCards
+                }
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `estatisticas-partida-${new Date().toLocaleDateString('pt-BR')}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        }
+
+        // Alternar tema claro/escuro
+        function toggleTheme() {
+            const body = document.body;
+            const themeBtn = document.querySelector('.advanced-btn:nth-child(3) i');
+            
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                themeBtn.className = 'fas fa-moon';
+                themeBtn.parentElement.innerHTML = '<i class="fas fa-moon"></i> Tema Escuro';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark-theme');
+                themeBtn.className = 'fas fa-sun';
+                themeBtn.parentElement.innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Salvar no localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('matchStats', JSON.stringify(matchStats));
+        }
+
+        // Carregar dados salvos
+        function loadSavedData() {
+            // Carregar estatísticas
+            const savedStats = localStorage.getItem('matchStats');
+            if (savedStats) {
+                matchStats = JSON.parse(savedStats);
+                updateAllDisplays();
+                
+                // Atualizar nomes dos times
+                document.getElementById('home-team-name').value = matchStats.home.name;
+                document.getElementById('away-team-name').value = matchStats.away.name;
+                document.getElementById('home-team-title').textContent = matchStats.home.name.toUpperCase();
+                document.getElementById('away-team-title').textContent = matchStats.away.name.toUpperCase();
+            }
+            
+            // Carregar logos
+            const homeLogo = localStorage.getItem('home-logo');
+            const awayLogo = localStorage.getItem('away-logo');
+            
+            if (homeLogo) {
+                const logoImg = document.getElementById('home-logo-img');
+                const defaultIcon = document.querySelector('#home-logo .default-logo');
+                
+                logoImg.src = homeLogo;
+                logoImg.style.display = 'block';
+                defaultIcon.style.display = 'none';
+            }
+            
+            if (awayLogo) {
+                const logoImg = document.getElementById('away-logo-img');
+                const defaultIcon = document.querySelector('#away-logo .default-logo');
+                
+                logoImg.src = awayLogo;
+                logoImg.style.display = 'block';
+                defaultIcon.style.display = 'none';
+            }
+            
+            // Carregar tema
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.querySelector('.advanced-btn:nth-child(3) i').className = 'fas fa-sun';
+                document.querySelector('.advanced-btn:nth-child(3)').innerHTML = '<i class="fas fa-sun"></i> Tema Claro';
+            }
+        }
+
+        // Iniciar com tema salvo
+        window.onload = loadSavedData;
+    </script>
+</body>
+</html>
